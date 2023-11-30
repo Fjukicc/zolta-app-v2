@@ -1,5 +1,8 @@
-import React from "react";
+"use client";
+import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+
 import {
   AppstoreOutlined,
   ContainerOutlined,
@@ -7,6 +10,7 @@ import {
   MailOutlined,
   PieChartOutlined,
 } from "@ant-design/icons";
+import { IoMdQrScanner } from "react-icons/io";
 import { Menu } from "antd";
 
 function getItem(label, key, icon, children, type) {
@@ -20,15 +24,32 @@ function getItem(label, key, icon, children, type) {
 }
 
 const items = [
-  getItem(<Link href={"/dashboard"}>Home</Link>, "1", <PieChartOutlined />),
-  getItem(<Link href={"/dashboard/calendar-page"}>Calendar</Link>, "2", <CalendarOutlined />),
-  getItem("Option 3", "3", <ContainerOutlined />),
-  getItem("Navigation One", "sub1", <MailOutlined />, [
-    getItem("Option 5", "5"),
-    getItem("Option 6", "6"),
-    getItem("Option 7", "7"),
-    getItem("Option 8", "8"),
+  getItem(
+    <Link href={"/dashboard"}>Home</Link>,
+    "/dashboard",
+    <PieChartOutlined />
+  ),
+  getItem(
+    <Link href={"/dashboard/calendar-page"}>Calendar</Link>,
+    "/dashboard/calendar-page",
+    <CalendarOutlined />
+  ),
+  getItem("Invoices", "3", <ContainerOutlined />),
+  getItem("Services", "4", <MailOutlined />, [
+    getItem(
+      <Link href={"/dashboard/services"}>Services</Link>,
+      "/dashboard/services"
+    ),
+    getItem(
+      <Link href={"/dashboard/service-categories"}>Service Categories</Link>,
+      "/dashboard/service-categories"
+    ),
   ]),
+  getItem(
+    <Link href={"/dashboard/xray-scan"}>X-Ray</Link>,
+    "/dashboard/xray-scan",
+    <IoMdQrScanner />
+  ),
   getItem("Navigation Two", "sub2", <AppstoreOutlined />, [
     getItem("Option 9", "9"),
     getItem("Option 10", "10"),
@@ -40,13 +61,24 @@ const items = [
 ];
 
 const AppSidebar = () => {
+  const pathname = usePathname();
+  //state variables
+  const [current, setCurrent] = useState(pathname);
+
+  React.useEffect(() => {
+    if (pathname) {
+      if (current !== pathname) {
+        setCurrent(pathname);
+      }
+    }
+  }, []);
+
   return (
     <Menu
-      defaultSelectedKeys={["1"]}
-      defaultOpenKeys={["sub1"]}
+      selectedKeys={[current]}
       mode="inline"
       theme="light"
-      style={{minHeight: "100%",  backgroundColor: "rgb(240, 242, 245)"}}
+      style={{ minHeight: "100%", backgroundColor: "rgb(240, 242, 245)" }}
       items={items}
     />
   );

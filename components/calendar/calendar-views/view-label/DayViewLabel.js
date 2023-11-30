@@ -1,16 +1,22 @@
 "use client";
 import React, { useRef, useState } from "react";
+//draggable react
 import Draggable from "react-draggable";
+//moment js
 import moment from "moment";
-import { FiMove } from "react-icons/fi";
+//ant d
+import { Tag } from "antd";
 
-//components
+//modals
 import OnDragConfrimModal from "../../modal/OnDragConfrimModal";
 
 const DayViewLabel = ({ label, containerRef }) => {
   const elementRef = useRef(null);
   //labal data so we can mutate it while draggin and on finish everything will be updated
   const [labelData, setLabelData] = useState(label);
+
+  //is label beeing dragged
+  const [isDragging, setIsDragging] = useState(false);
 
   //follow y cord (iskreno mislim da je bespotrebno al ok)
   const [yCoordinate, setYCoordinate] = useState(0);
@@ -30,16 +36,28 @@ const DayViewLabel = ({ label, containerRef }) => {
 
     if (elementRect.top < containerRect.top) {
       // Scrolling up
-      container.scrollTop -= 21; // Adjust the scrolling speed if needed
+      container.scrollTop -= 20; // Adjust the scrolling speed if needed
     } else if (elementRect.bottom > containerRect.bottom) {
       // Scrolling down
-      container.scrollTop += 21; // Adjust the scrolling speed if needed
+      container.scrollTop += 20; // Adjust the scrolling speed if needed
     }
 
-    calculateStartTime(parseInt(ui.y));
+    calculateNewStartTime(parseInt(ui.y));
   };
 
-  function calculateStartTime(offset) {
+  //start dragging helper function
+  const handleStart = () => {
+    setIsDragging(true);
+  };
+
+  //on drag end show modal and hide label
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    showDragModal();
+  };
+
+  //calculate new start time when component is dragged
+  function calculateNewStartTime(offset) {
     const addMinutes = (offset / 96) * 60;
 
     //always has first and last time of reservation based on static offset
@@ -70,7 +88,6 @@ const DayViewLabel = ({ label, containerRef }) => {
 
   const cancelModal = () => {
     setConfirmDragModalVisible(false);
-    console.log(label);
     setLabelData(label);
     setYCoordinate(0);
   };
@@ -79,36 +96,61 @@ const DayViewLabel = ({ label, containerRef }) => {
     //update database
   };
 
-  //on drag end show modal
-  const handleDragEnd = () => {
-    showDragModal(true);
-  };
   return (
     <>
+      {/* static label that is shown for dragging purposes */}
+      {isDragging && (
+        <div
+          className="flex flex-col absolute p-2 overflow-hidden w-11/12 right-0 rounded-lg shadow bg-fuchsia-300 border-green-400"
+          style={{
+            top: label.normalizeMarginTop,
+            height: label.normalizedTimeDifference,
+            opacity: isDragging ? 0.5 : 1,
+          }}
+        ></div>
+      )}
+
+      {/* draggable component */}
       <Draggable
         position={{ x: 0, y: yCoordinate }}
-        handle="strong"
         bounds="parent"
         onDrag={handleDrag}
         onStop={handleDragEnd}
+        onStart={handleStart}
         axis="y"
         grid={[24, 24]}
       >
         <div
-          className="flex flex-col absolute p-2 overflow-hidden w-11/12 right-0 rounded-lg shadow bg-fuchsia-300 border-green-400"
+          className="cursor-pointer flex flex-col absolute p-2 overflow-hidden w-11/12 right-0 rounded-lg shadow bg-fuchsia-300 border-green-400"
           ref={elementRef}
           style={{
             top: labelData.normalizeMarginTop,
             height: labelData.normalizedTimeDifference,
+            justifyContent:  parseInt(label.normalizedTimeDifference) > 48 ? null : "center",
           }}
         >
-          <div className="flex w-full flex-row justify-center items-center">
-            <strong className="p-2 hover:bg-green-300 cursor-grab">
-              <FiMove />
-            </strong>
-          </div>
-          <div className="flex flex-row box no-cursor w-full justify-between">
-            <span className="font-bold">{labelData.service_name}</span>
+          <div
+            className="flex box no-cursor items-start"
+            style={{
+              flexDirection:
+                parseInt(label.normalizedTimeDifference) > 48
+                  ? "column"
+                  : "row",
+              justifyContent: parseInt(label.normalizedTimeDifference) > 48 ? "flex-start" : null,
+            }}
+          >
+            {/* service or services */}
+            <div className="flex flex-row">
+              {labelData.service_name.map((service) => {
+                return (
+                  <Tag key={service} className="mr-2" color="#2db7f5">
+                    {service}
+                  </Tag>
+                );
+              })}
+            </div>
+
+            {/* label time */}
             <div>
               <span>
                 {moment(labelData.start_time, "HH:mm:ss")

@@ -1,5 +1,11 @@
 "use client";
-import React, { useRef, useMemo, useState, useEffect } from "react";
+import React, {
+  useRef,
+  useMemo,
+  useState,
+  useLayoutEffect,
+  useEffect,
+} from "react";
 import moment from "moment";
 import { calculateLabelLengthAndPositionWeek } from "../bl";
 //components
@@ -8,10 +14,12 @@ import WeekViewLabel from "./view-label/WeekViewLabel";
 const WeekView = ({ setLabels, labels, date, gridData }) => {
   //state which will containt updated labels for printing data
   const [updatedLabelsForPrinting, setUpdatedLabelsForPrinting] = useState();
+  const [updatedLabelsForPrintingLoading, setUpdatedLabelsForPrintingLoading] =
+    useState(true);
 
+  // map throught labels and set additional atributes required for calendar
   useEffect(() => {
     var mappedLabels;
-
     mappedLabels = labels.map((item) => {
       const {
         normalizeLeftPosition,
@@ -27,9 +35,9 @@ const WeekView = ({ setLabels, labels, date, gridData }) => {
         normalizedHeight: normalizedHeight,
       };
     });
-
     setUpdatedLabelsForPrinting(mappedLabels);
-  }, []);
+    setUpdatedLabelsForPrintingLoading(false);
+  }, [labels]);
 
   const containerRef = useRef(null);
   const columnRef = useRef(null);
@@ -55,22 +63,33 @@ const WeekView = ({ setLabels, labels, date, gridData }) => {
 
   return (
     <div
-      className="w-full overflow-y-scroll"
-      style={{ userSelect: "none", maxHeight: "60vh" }}
+      className="w-full overflow-y-scroll flex pt-4"
+      style={{ userSelect: "none", maxHeight: "70vh" }}
       ref={containerRef}
     >
-      <table className="w-full border-collapse">
+      {/* table for showing time */}
+      <table className="w-1/12 border-collapse">
+        {gridData ? (
+          <tbody className="w-full">
+            {gridData.map((time) => (
+              <tr key={time.label} className="w-full h-24">
+                <td className="pl-1 border-r border-gray-200 border-solid w-full relative">
+                  <span className="absolute -top-2">{time.label}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        ) : null}
+      </table>
+      <table className="w-11/12 border-collapse">
         {gridData ? (
           <tbody className="relative w-full">
             {gridData.map((time) => (
               <tr
                 key={time.label}
-                className="border-t border-b border-solid border-gray-200 h-24"
+                className="border-t border-b w-full border-solid border-gray-200 h-24"
               >
                 {/* left col for time */}
-                <td className="pl-1 border-r border-gray-200 border-solid w-1/12">
-                  {time.label}
-                </td>
                 {arrayOfWeek?.map((day, i) => {
                   if (
                     day.realDate.toString() ===
@@ -79,7 +98,7 @@ const WeekView = ({ setLabels, labels, date, gridData }) => {
                     return (
                       <td
                         key={i}
-                        className="border-b border-r bg-blue-200 hover:bg-blue-100 border-gray-200 border-solid px-1"
+                        className="border-b border-r border-t border-solid px-1 bg-blue-100 bg-opacity-50 hover:bg-opacity-50 hover:bg-blue-50"
                       ></td>
                     );
                   } else {
@@ -96,8 +115,9 @@ const WeekView = ({ setLabels, labels, date, gridData }) => {
             ))}
 
             {/* print reservations and put them on the grid */}
-            {updatedLabelsForPrinting?.map((label, i) => {
-              const isLabelInActiveWeekDate = moment(date).isSame(
+
+            {!updatedLabelsForPrintingLoading && updatedLabelsForPrinting?.map((label, i) => {
+              let isLabelInActiveWeekDate = moment(date).isSame(
                 label.date,
                 "isoWeek"
               );

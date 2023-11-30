@@ -1,6 +1,6 @@
-"use client"
+"use client";
 import { Layout } from "antd";
-import React,{useState} from "react";
+import React, { useEffect, useState } from "react";
 import AppNavbar from "@/components/Navbar";
 import AppSidebar from "@/components/Sidebar";
 
@@ -8,16 +8,39 @@ const { Header, Sider, Content } = Layout;
 
 const DashLayout = ({ children }) => {
   //colapse sidebar
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState();
+
+  useEffect(() => {
+    let is_collapsed = localStorage.getItem("sidebarCollapsed");
+    setIsSidebarCollapsed(is_collapsed === "true" ? true : false);
+  }, []);
+
+  useEffect(() => {
+    let is_sidebar_collapsed = localStorage.getItem("sidebarCollapsed");
+    if (!isSidebarCollapsed || isSidebarCollapsed !== is_sidebar_collapsed) {
+      localStorage.setItem("sidebarCollapsed", isSidebarCollapsed);
+    }
+  }, [isSidebarCollapsed]);
 
   return (
-      <Layout style={{ minHeight: "100vh", backgroundColor: "rgb(240, 242, 245)"}}>
+    <Layout
+      style={{ minHeight: "100vh", backgroundColor: "rgb(240, 242, 245)" }}
+    >
       <Header className="border-b-2 shadow" style={headerStyle}>
-        <AppNavbar setIsSidebarCollapsed={setIsSidebarCollapsed} isSidebarCollapsed={isSidebarCollapsed}/>
+        <AppNavbar
+          setIsSidebarCollapsed={setIsSidebarCollapsed}
+          isSidebarCollapsed={isSidebarCollapsed}
+        />
       </Header>
       <Layout hasSider>
-        <Sider trigger={null} collapsible collapsed={isSidebarCollapsed} theme="light" style={siderStyle}>
-          <AppSidebar/>
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={isSidebarCollapsed}
+          theme="light"
+          style={siderStyle}
+        >
+          <AppSidebar />
         </Sider>
         <Content style={contentStyle}>{children}</Content>
       </Layout>

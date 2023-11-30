@@ -1,5 +1,7 @@
 import moment from "moment";
 
+var CALENDAR_ONE_GRID_HEIGHT = 96;
+
 //calculate hours in calendar -> creating hours and adding them to array
 export const calculateCalendarHours = (startingHour, endingHour) => {
   const allHoursInCalendarGrid = [];
@@ -35,18 +37,15 @@ export const decreaseDay = (date) => {
   return moment(date, "YYYY-MM-DD").add(-1, "days").format("YYYY-MM-DD");
 };
 
-export const increaseWeek = (date) => {};
-
-export const decreaseWeek = (date) => {};
 
 export const fakeData = [
   {
     admin_id: 3,
     admin_name: "ivo",
     company_id: 3,
-    date: "2023-10-3",
+    date: "2023-10-23",
     description: "ddsfsfdssd",
-    end_time: "12:45:00",
+    end_time: "12:15:00",
     id: 1,
     name: "branimir",
     service_name: ["tvoji zubi", "moji zubi"],
@@ -59,9 +58,9 @@ export const fakeData = [
     admin_id: 4,
     admin_name: "Leonardo",
     company_id: 3,
-    date: "2023-10-2",
+    date: "2023-10-24",
     description: "gfhfh",
-    end_time: "13:45:00",
+    end_time: "13:30:00",
     id: 2,
     name: "borna",
     service_name: ["njihovi zubi"],
@@ -110,38 +109,35 @@ export const calculateLabelLengthAndPositionDay = (label) => {
 //where to print days in content header
 //print labels on grid
 const printLabelOnGirdHandler = (reservationDateDay) => {
-  var leftPosition;
-
-  // (percentage)
-  var timeColumnWidth = (1 / 12) * 100;
+  var leftPosition = 0;
 
   // sunday
   if (reservationDateDay === 0) {
-    leftPosition = timeColumnWidth + (11 / 12 / 7) * 100 * 6;
+    leftPosition =  (1/ 7) * 100 * 6;
   }
   // monday
   if (reservationDateDay === 1) {
-    leftPosition = timeColumnWidth;
+    leftPosition = 0;
   }
   // Tuesday
   if (reservationDateDay === 2) {
-    leftPosition = timeColumnWidth + (11 / 12 / 7) * 100;
+    leftPosition = (1 / 7) * 100;
   }
   // Wednesday
   if (reservationDateDay === 3) {
-    leftPosition = timeColumnWidth + (11 / 12 / 7) * 100 * 2;
+    leftPosition = (1 / 7) * 100 * 2;
   }
   // Thursday
   if (reservationDateDay === 4) {
-    leftPosition = timeColumnWidth + (11 / 12 / 7) * 100 * 3;
+    leftPosition = (1 / 7) * 100 * 3;
   }
   // Friday
   if (reservationDateDay === 5) {
-    leftPosition = timeColumnWidth + (11 / 12 / 7) * 100 * 4;
+    leftPosition = (1/ 7) * 100 * 4;
   }
   // Saturday
   if (reservationDateDay === 6) {
-    leftPosition = timeColumnWidth + (11 / 12 / 7) * 100 * 5;
+    leftPosition = (1 / 7) * 100 * 5;
   }
 
   return leftPosition;
@@ -183,7 +179,7 @@ export const calculateLabelLengthAndPositionWeek = (label) => {
 
   var normalizeLeftPosition = printLabelOnGirdHandler(reservationDateDay);
 
-  var normalizeWidth = ((11 / 12) * 100) / 7;
+  var normalizeWidth = 100 / 7;
 
   return {
     normalizedHeight,

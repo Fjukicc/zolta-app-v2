@@ -1,44 +1,36 @@
 "use client";
 import React, { useEffect, useState } from "react";
-//bl
-import { calculateCalendarHours, createReadebleHours } from "./bl";
+
 //components
 import DayView from "./calendar-views/DayView";
 import WeekView from "./calendar-views/WeekView";
 
 //DATE PARAM IS CURRENT DATE STATE OF CALENDAR
 
-const Content = ({ date, labels, setLabels, calendarView }) => {
-
-  // data to fill the grid
-  const [gridData, setGridData] = useState();
-
-  //create grid
-  useEffect(() => {
-    const hoursArray = calculateCalendarHours(9, 20);
-    const readebleArray = createReadebleHours(hoursArray, 20);
-
-    if (readebleArray) {
-      setGridData(readebleArray);
-    }
-  }, []);
+const Content = ({
+  date,
+  reservations,
+  setReservations,
+  calendarView,
+  gridData,
+}) => {
   return (
     <>
       {/* DAY VIEW */}
-      {labels && calendarView === "Day" && (
+      {calendarView === "Day" && (
         <DayView
-          setLabels={setLabels}
-          labels={labels}
+          setLabels={setReservations}
+          labels={reservations}
           date={date}
           gridData={gridData}
         />
       )}
 
       {/* WEEK VIEW */}
-      {labels && calendarView === "Week" && (
+      {calendarView === "Week" && (
         <WeekView
-          setLabels={setLabels}
-          labels={labels}
+          setLabels={setReservations}
+          labels={reservations}
           date={date}
           gridData={gridData}
         />

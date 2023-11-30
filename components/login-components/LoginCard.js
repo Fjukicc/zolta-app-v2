@@ -2,15 +2,15 @@
 import React, { useState } from "react";
 import { Card } from "antd";
 import { AiOutlineEyeInvisible, AiOutlineEye } from "react-icons/ai";
-import { postData } from "@/services/api";
+// import { postData } from "@/services/api";
+import { signIn } from "next-auth/react";
 
 const LoginCard = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [error, setError] = useState(false)
+  const [error, setError] = useState(false);
 
   //on login
   const handleFormSubmit = async (e) => {
-    debugger;
     e.preventDefault();
 
     const data = {
@@ -18,13 +18,11 @@ const LoginCard = () => {
       password: e.target.password.value,
     };
 
-    const response = await postData("http://3.75.131.109/admin/login", data);
-    if(response.result === true){
-        setError(false);
-
-    }
-    else{
-        setError(true);
+    // const response = await postData("http://3.75.131.109/admin/login", data);
+    if (response.result === true) {
+      setError(false);
+    } else {
+      setError(true);
     }
   };
 
@@ -94,9 +92,11 @@ const LoginCard = () => {
             Login
           </button>
         </div>
-        {
-            error && <p className="text-red-600 text-left font-semibold">Wrong username or password :(</p>
-        }
+        {error && (
+          <p className="text-red-600 text-left font-semibold">
+            Wrong username or password :(
+          </p>
+        )}
       </form>
     </Card>
   );

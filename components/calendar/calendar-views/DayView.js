@@ -8,7 +8,10 @@ import DayViewLabel from "./view-label/DayViewLabel";
 
 const DayView = ({ gridData, date, labels, setLabels }) => {
   //state which will containt updated labels for printing data
-  const [updatedLabelsForPrinting, setUpdatedLabelsForPrinting] = useState(null);
+  const [updatedLabelsForPrinting, setUpdatedLabelsForPrinting] =
+    useState(null);
+  const [updatedLabelsForPrintingLoading, setUpdatedLabelsForPrintingLoading] =
+    useState(true);
 
   useEffect(() => {
     var mappedLabels;
@@ -23,13 +26,14 @@ const DayView = ({ gridData, date, labels, setLabels }) => {
       };
     });
 
-    setUpdatedLabelsForPrinting(mappedLabels)
-  }, []);
+    setUpdatedLabelsForPrinting(mappedLabels);
+    setUpdatedLabelsForPrintingLoading(false);
+  }, [labels]);
   const containerRef = useRef(null);
   return (
     <div
       className="w-full overflow-y-scroll"
-      style={{ userSelect: "none", maxHeight: "60vh" }}
+      style={{ userSelect: "none", maxHeight: "70vh" }}
       ref={containerRef}
     >
       <table className="w-full border-collapse">
@@ -49,21 +53,23 @@ const DayView = ({ gridData, date, labels, setLabels }) => {
             ))}
 
             {/* print reservations and put them on the grid */}
-            {updatedLabelsForPrinting?.map((label, i) => {
-              if (date === moment(label.date).format("YYYY-MM-DD")) {
-                return (
-                  <DayViewLabel
-                    setLabels={setLabels}
-                    containerRef={containerRef}
-                    id={label}
-                    key={i}
-                    label={label}
-                  />
-                );
-              } else {
-                return;
-              }
-            })}
+            {!updatedLabelsForPrintingLoading &&
+              updatedLabelsForPrinting?.map((label, i) => {
+                debugger;
+                if (date === moment(label.date).format("YYYY-MM-DD")) {
+                  return (
+                    <DayViewLabel
+                      setLabels={setLabels}
+                      containerRef={containerRef}
+                      id={label}
+                      key={i}
+                      label={label}
+                    />
+                  );
+                } else {
+                  return;
+                }
+              })}
           </tbody>
         ) : null}
       </table>
