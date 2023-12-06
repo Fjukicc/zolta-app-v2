@@ -10,7 +10,6 @@ import WeekView from "./calendar-views/WeekView";
 const Content = ({
   date,
   reservations,
-  setReservations,
   calendarView,
   gridData,
 }) => {
@@ -19,7 +18,6 @@ const Content = ({
       {/* DAY VIEW */}
       {calendarView === "Day" && (
         <DayView
-          setLabels={setReservations}
           labels={reservations}
           date={date}
           gridData={gridData}
@@ -29,7 +27,6 @@ const Content = ({
       {/* WEEK VIEW */}
       {calendarView === "Week" && (
         <WeekView
-          setLabels={setReservations}
           labels={reservations}
           date={date}
           gridData={gridData}

@@ -11,7 +11,7 @@ import { calculateLabelLengthAndPositionWeek } from "../bl";
 //components
 import WeekViewLabel from "./view-label/WeekViewLabel";
 
-const WeekView = ({ setLabels, labels, date, gridData }) => {
+const WeekView = ({ labels, date, gridData }) => {
   //state which will containt updated labels for printing data
   const [updatedLabelsForPrinting, setUpdatedLabelsForPrinting] = useState();
   const [updatedLabelsForPrintingLoading, setUpdatedLabelsForPrintingLoading] =
@@ -20,23 +20,25 @@ const WeekView = ({ setLabels, labels, date, gridData }) => {
   // map throught labels and set additional atributes required for calendar
   useEffect(() => {
     var mappedLabels;
-    mappedLabels = labels.map((item) => {
-      const {
-        normalizeLeftPosition,
-        normalizeMarginTop,
-        normalizeWidth,
-        normalizedHeight,
-      } = calculateLabelLengthAndPositionWeek(item);
-      return {
-        ...item,
-        normalizeMarginTop: normalizeMarginTop,
-        normalizeLeftPosition: normalizeLeftPosition,
-        normalizeWidth: normalizeWidth,
-        normalizedHeight: normalizedHeight,
-      };
-    });
-    setUpdatedLabelsForPrinting(mappedLabels);
-    setUpdatedLabelsForPrintingLoading(false);
+    if (labels !== null) {
+      mappedLabels = labels.map((item) => {
+        const {
+          normalizeLeftPosition,
+          normalizeMarginTop,
+          normalizeWidth,
+          normalizedHeight,
+        } = calculateLabelLengthAndPositionWeek(item);
+        return {
+          ...item,
+          normalizeMarginTop: normalizeMarginTop,
+          normalizeLeftPosition: normalizeLeftPosition,
+          normalizeWidth: normalizeWidth,
+          normalizedHeight: normalizedHeight,
+        };
+      });
+      setUpdatedLabelsForPrinting(mappedLabels);
+      setUpdatedLabelsForPrintingLoading(false);
+    }
   }, [labels]);
 
   const containerRef = useRef(null);
@@ -116,27 +118,27 @@ const WeekView = ({ setLabels, labels, date, gridData }) => {
 
             {/* print reservations and put them on the grid */}
 
-            {!updatedLabelsForPrintingLoading && updatedLabelsForPrinting?.map((label, i) => {
-              let isLabelInActiveWeekDate = moment(date).isSame(
-                label.date,
-                "isoWeek"
-              );
-
-              if (isLabelInActiveWeekDate) {
-                return (
-                  <WeekViewLabel
-                    columnRef={columnRef}
-                    setLabels={setLabels}
-                    containerRef={containerRef}
-                    id={label}
-                    key={i}
-                    label={label}
-                  />
+            {!updatedLabelsForPrintingLoading &&
+              updatedLabelsForPrinting?.map((label, i) => {
+                let isLabelInActiveWeekDate = moment(date).isSame(
+                  label.date,
+                  "isoWeek"
                 );
-              } else {
-                return;
-              }
-            })}
+
+                if (isLabelInActiveWeekDate) {
+                  return (
+                    <WeekViewLabel
+                      columnRef={columnRef}
+                      containerRef={containerRef}
+                      id={label}
+                      key={i}
+                      label={label}
+                    />
+                  );
+                } else {
+                  return;
+                }
+              })}
           </tbody>
         ) : null}
       </table>

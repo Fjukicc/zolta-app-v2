@@ -6,7 +6,7 @@ import moment from "moment";
 //components
 import DayViewLabel from "./view-label/DayViewLabel";
 
-const DayView = ({ gridData, date, labels, setLabels }) => {
+const DayView = ({ gridData, date, labels }) => {
   //state which will containt updated labels for printing data
   const [updatedLabelsForPrinting, setUpdatedLabelsForPrinting] =
     useState(null);
@@ -15,20 +15,23 @@ const DayView = ({ gridData, date, labels, setLabels }) => {
 
   useEffect(() => {
     var mappedLabels;
+    debugger;
+    if (labels !== null) {
+      mappedLabels = labels.map((item) => {
+        const { normalizeMarginTop, normalizedTimeDifference } =
+          calculateLabelLengthAndPositionDay(item);
+        return {
+          ...item,
+          normalizeMarginTop: normalizeMarginTop,
+          normalizedTimeDifference: normalizedTimeDifference,
+        };
+      });
 
-    mappedLabels = labels.map((item) => {
-      const { normalizeMarginTop, normalizedTimeDifference } =
-        calculateLabelLengthAndPositionDay(item);
-      return {
-        ...item,
-        normalizeMarginTop: normalizeMarginTop,
-        normalizedTimeDifference: normalizedTimeDifference,
-      };
-    });
-
-    setUpdatedLabelsForPrinting(mappedLabels);
-    setUpdatedLabelsForPrintingLoading(false);
+      setUpdatedLabelsForPrinting(mappedLabels);
+      setUpdatedLabelsForPrintingLoading(false);
+    }
   }, [labels]);
+
   const containerRef = useRef(null);
   return (
     <div
@@ -55,11 +58,9 @@ const DayView = ({ gridData, date, labels, setLabels }) => {
             {/* print reservations and put them on the grid */}
             {!updatedLabelsForPrintingLoading &&
               updatedLabelsForPrinting?.map((label, i) => {
-                debugger;
                 if (date === moment(label.date).format("YYYY-MM-DD")) {
                   return (
                     <DayViewLabel
-                      setLabels={setLabels}
                       containerRef={containerRef}
                       id={label}
                       key={i}

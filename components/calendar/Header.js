@@ -37,7 +37,8 @@ const Header = ({
   employess,
   setSelectedEmployee,
   selectedEmployee,
-  setReservationsLoading,
+  fetchReservationsForNewAdmin,
+  setIsRentsRefetching
 }) => {
   // console.log(selectedEmployee);
   const [daysInWeek, setDaysInWeek] = useState([]);
@@ -122,8 +123,9 @@ const Header = ({
               label: worker.name,
             }))}
             onChange={(value, selectedOptions) => {
-              setReservationsLoading(true);
+              setIsRentsRefetching(true);
               setSelectedEmployee(selectedOptions);
+              fetchReservationsForNewAdmin(selectedOptions.id);
             }}
             filterOption={(input, option) =>
               (option?.label ?? "").toLowerCase().includes(input.toLowerCase())

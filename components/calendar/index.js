@@ -18,8 +18,6 @@ import { useSession } from "next-auth/react";
 //drawers and modals
 import CalendarSettingsDrawer from "./drawer/CalendarSettingsDrawer";
 import AddRentModal from "../shared/shared-modals/AddRentModal";
-//api
-import { fetchAdminReservations } from "@/services/reservation";
 //swr
 import { fetcher } from "@/swr/fetcher";
 import useSWR from "swr";
@@ -27,6 +25,12 @@ import useSWR from "swr";
 const Calendar = () => {
   //session
   const { data: session, status: sessionStatus } = useSession();
+
+  //are rent refetching
+  const [isRentsRefetching, setIsRentsRefetching] = useState(false);
+
+  //selected employee
+  const [selectedEmployee, setSelectedEmployee] = useState();
 
   //fetch employee data
   const {
@@ -41,6 +45,27 @@ const Calendar = () => {
   );
   const employeeEffectCalled = useRef(false);
 
+  //fetch reservations data
+  const {
+    data: rentData,
+    error: rentError,
+    isLoading: rentLoading,
+    mutate: mutateReservations,
+  } = useSWR(
+    selectedEmployee
+      ? `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${selectedEmployee.id}`
+      : null,
+    fetcher
+  );
+
+  //fetch new reservation for changed selected admin
+  const fetchReservationsForNewAdmin = async (admin_id) => {
+    // const newUrl = `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${ }`;
+
+    await mutateReservations(newUrl);
+    setIsRentsRefetching(false);
+  };
+
   // ADD RENT MODAL
   const [isAddReservationModalOpen, setIsAddReservationModalOpen] =
     useState(false);
@@ -52,12 +77,6 @@ const Calendar = () => {
   const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
   // data to fill the grid
   const [gridData, setGridData] = useState();
-
-  const [selectedEmployee, setSelectedEmployee] = useState();
-
-  //set all labels (implement caching)
-  const [reservations, setReservations] = useState();
-  const [reservationsLoading, setReservationsLoading] = useState(true);
 
   //segmented (week, day, list)
   const [calendarView, setCalendarView] = useState("Day");
@@ -87,7 +106,6 @@ const Calendar = () => {
   //   };
   // }, []);
 
-
   //set initial employee
   useEffect(() => {
     if (employeeData && !employeeEffectCalled.current) {
@@ -101,23 +119,6 @@ const Calendar = () => {
       employeeEffectCalled.current = true;
     }
   }, [employeeData]);
-
-  //fetch reservations onload
-  useEffect(() => {
-    const fetchAllReservations = async () => {
-      if (selectedEmployee) {
-        const data = await fetchAdminReservations({
-          admin_id: selectedEmployee.id,
-        });
-        if (data.success) {
-          setReservations(data.data);
-          setReservationsLoading(false);
-        }
-      }
-    };
-
-    fetchAllReservations();
-  }, [selectedEmployee]);
 
   //create grid for the calendar
   useEffect(() => {
@@ -185,12 +186,16 @@ const Calendar = () => {
   //generate grid data
 
   //is component in loading state
-  if (employeeLoading === true) {
+  if (
+    employeeLoading === true &&
+    rentLoading === true &&
+    isRentsRefetching === false
+  ) {
     return <p className=" text-3xl text-black font-bold">Loading...</p>;
   }
 
   //is component in error state
-  if (employeeError === true) {
+  if (employeeError === true && rentError === true) {
     return (
       <p className=" text-3xl text-black font-bold">
         Error (check internet connection)...
@@ -217,15 +222,15 @@ const Calendar = () => {
               showAddReservationModal={showAddReservationModal}
               selectedEmployee={selectedEmployee}
               setSelectedEmployee={setSelectedEmployee}
-              setReservationsLoading={setReservationsLoading}
+              fetchReservationsForNewAdmin={fetchReservationsForNewAdmin}
+              setIsRentsRefetching={setIsRentsRefetching}
             />
           )}
         </div>
         <div className="w-full">
-          {!reservationsLoading && (
+          {rentData && employeeData && selectedEmployee && calendarView && (
             <Content
-              setReservations={setReservations}
-              reservations={reservations}
+              reservations={rentData}
               date={date}
               calendarView={calendarView}
               gridData={gridData}
@@ -233,12 +238,12 @@ const Calendar = () => {
           )}
         </div>
       </Card>
-      <CalendarSettingsDrawer
+      {/* <CalendarSettingsDrawer
         settingsDrawerOpen={settingsDrawerOpen}
         onSettingsDrawerClose={onSettingsDrawerClose}
         calendarSettingsCopy={calendarSettingsCopy}
         setCalendarSettingsCopy={setCalendarSettingsCopy}
-      />
+      /> */}
       {/* ADD RENT MODAL */}
       {employeeData && (
         <AddRentModal
