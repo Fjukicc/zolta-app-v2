@@ -26,6 +26,15 @@ export const addNewReservation = async (reservation_data) => {
     }
 
     const new_rent = await data.json();
+
+    // if result is false
+    if (new_rent.result === false) {
+      return {
+        success: false,
+        error: "Failed to add new reservations!",
+      };
+    }
+
     return {
       success: true,
       data: new_rent,
@@ -38,47 +47,48 @@ export const addNewReservation = async (reservation_data) => {
   }
 };
 
-//fetch admin reservations
-export const fetchAdminReservations = async ({
-    admin_id,
-    range_start_date,
-    range_end_date,
-    date,
-  }) => {
-    try {
-      const requestBody = {};
-  
-      if (admin_id) {
-        requestBody.admin_id = admin_id;
+//delete reservation
+export const deleteReservation = async (rent_id) => {
+  try {
+    const request_data = {
+      id: rent_id,
+    };
+
+    const data = await fetch(
+      "http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation",
+      {
+        method: "DELETE",
+        body: JSON.stringify(request_data),
       }
-      if (range_start_date) {
-        requestBody.range_start_date = range_start_date;
-      }
-      if (range_end_date) {
-        requestBody.range_end_date = range_end_date;
-      }
-      if(date){
-        requestBody.date = date;
-      }
-  
-      const data = await fetch("http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation/filter", {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-      });
-  
-      if (!data.ok) {
-        throw new Error("Failed to fetch admin reservations");
-      }
-      const admin_reservations = await data.json();
-      return {
-        success: true,
-        data: admin_reservations,
-      };
-    } catch (error) {
-      console.error(error);
+    );
+    if (!data.ok) {
+      throw new Error("Failed to delete reservations!");
+    }
+
+    const new_rent = await data.json();
+
+    // if result is false
+    if (new_rent.result === false) {
       return {
         success: false,
-        error: "Failed to fetch admin reservations",
+        error: "Failed to delete reservations!",
       };
     }
-  };
+
+    //return success
+    return {
+      success: true,
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      error: "Failed to delete reservations!",
+    };
+  }
+};
+
+//update reservation
+export const updateReservation = async (params) =>{
+
+}

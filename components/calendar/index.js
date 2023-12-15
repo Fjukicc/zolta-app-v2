@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import moment from "moment/moment";
 // utils
 import {
@@ -32,6 +32,9 @@ const Calendar = () => {
   //selected employee
   const [selectedEmployee, setSelectedEmployee] = useState();
 
+  //date of calendar
+  const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
+
   //fetch employee data
   const {
     data: employeeData,
@@ -41,7 +44,12 @@ const Calendar = () => {
     session
       ? `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/admin?company_id=${session.user.company_id}`
       : null,
-    fetcher
+    fetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
   );
   const employeeEffectCalled = useRef(false);
 
@@ -60,9 +68,43 @@ const Calendar = () => {
 
   //fetch new reservation for changed selected admin
   const fetchReservationsForNewAdmin = async (admin_id) => {
-    // const newUrl = `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${ }`;
+    const newUrl = `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${admin_id}`;
 
     await mutateReservations(newUrl);
+    setIsRentsRefetching(false);
+  };
+
+  //handle updating calendar if new rent is created and switch calendar to current user and week
+  const handleNewReservationForAdmin = async (selected_worker_id, date) => {
+    var new_employee = {};
+
+    employeeData.forEach((emp) => {
+      if (emp.id === selected_worker_id) {
+        new_employee = {
+          ...emp,
+          value: emp.name,
+          label: emp.name,
+        };
+      }
+    });
+
+    setSelectedEmployee(new_employee);
+    const toNormalDate = date.toDate();
+
+    if (calendarView === "Week") {
+      const nextWeek = moment(toNormalDate)
+        .startOf("isoWeek")
+        .format("YYYY-MM-DD");
+      setDate(nextWeek);
+    } else {
+      // setDate(moment(date).format("YYYY-MM-DD"));
+      const newDate = moment(toNormalDate, "YYYY-MM-DD").format("YYYY-MM-DD");
+      setDate(newDate);
+    }
+
+    const newUrl = `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${selected_worker_id}`;
+    await mutateReservations(newUrl);
+
     setIsRentsRefetching(false);
   };
 
@@ -74,12 +116,11 @@ const Calendar = () => {
     setIsAddReservationModalOpen(true);
   };
 
-  const [date, setDate] = useState(moment().format("YYYY-MM-DD"));
   // data to fill the grid
   const [gridData, setGridData] = useState();
 
   //segmented (week, day, list)
-  const [calendarView, setCalendarView] = useState("Day");
+  const [calendarView, setCalendarView] = useState("Week");
   const [windowWidth, setWindowWidth] = useState();
 
   //CALENDAR SETTINGS STATE
@@ -107,6 +148,7 @@ const Calendar = () => {
   // }, []);
 
   //set initial employee
+
   useEffect(() => {
     if (employeeData && !employeeEffectCalled.current) {
       var selected_employee;
@@ -122,8 +164,8 @@ const Calendar = () => {
 
   //create grid for the calendar
   useEffect(() => {
-    const hoursArray = calculateCalendarHours(9, 20);
-    const readebleArray = createReadebleHours(hoursArray, 20);
+    const hoursArray = calculateCalendarHours(9, 23);
+    const readebleArray = createReadebleHours(hoursArray, 23);
 
     if (readebleArray) {
       setGridData(readebleArray);
@@ -153,7 +195,7 @@ const Calendar = () => {
 
   //DAYS WEEK NAVIGATION FUNCTIONS
   const onNextButtonClick = () => {
-    if (calendarView === "Day") {
+    if (calendarView === "Day" || calendarView === "List") {
       const new_date = increaseDay(date);
       setDate(new_date);
     } else if (calendarView === "Week") {
@@ -166,7 +208,7 @@ const Calendar = () => {
   };
 
   const onPrevButtonClick = () => {
-    if (calendarView === "Day") {
+    if (calendarView === "Day" || calendarView === "List") {
       const new_date = decreaseDay(date);
       setDate(new_date);
     } else if (calendarView === "Week") {
@@ -182,8 +224,6 @@ const Calendar = () => {
     setDate(moment().format("YYYY-MM-DD"));
   };
   //DAYS WEEK NAVIGATION FUNCTIONS END
-
-  //generate grid data
 
   //is component in loading state
   if (
@@ -205,7 +245,7 @@ const Calendar = () => {
 
   return (
     <>
-      <Card style={{ height: "100%" }}>
+      <Card style={{ height: "100%" }} className="border-0">
         <div className="w-full mt-4">
           {employeeData && selectedEmployee && (
             <Header
@@ -228,14 +268,17 @@ const Calendar = () => {
           )}
         </div>
         <div className="w-full">
-          {rentData && employeeData && selectedEmployee && calendarView && (
-            <Content
-              reservations={rentData}
-              date={date}
-              calendarView={calendarView}
-              gridData={gridData}
-            />
-          )}
+          {!rentLoading &&
+            employeeData &&
+            selectedEmployee &&
+            !isRentsRefetching && (
+              <Content
+                reservations={rentData}
+                date={date}
+                calendarView={calendarView}
+                gridData={gridData}
+              />
+            )}
         </div>
       </Card>
       {/* <CalendarSettingsDrawer
@@ -250,6 +293,8 @@ const Calendar = () => {
           isAddReservationModalOpen={isAddReservationModalOpen}
           setIsAddReservationModalOpen={setIsAddReservationModalOpen}
           employess={employeeData}
+          handleNewReservationForAdminCalendar={handleNewReservationForAdmin}
+          setIsRentsRefetching={setIsRentsRefetching}
         />
       )}
     </>

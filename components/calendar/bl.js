@@ -179,7 +179,7 @@ export const calculateLabelLengthAndPositionWeek = (label) => {
 
   var normalizeLeftPosition = printLabelOnGirdHandler(reservationDateDay);
 
-  var normalizeWidth = 100 / 7;
+  var normalizeWidth = 100/7;
 
   return {
     normalizedHeight,

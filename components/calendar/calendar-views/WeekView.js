@@ -1,27 +1,63 @@
 "use client";
-import React, {
-  useRef,
-  useMemo,
-  useState,
-  useLayoutEffect,
-  useEffect,
-} from "react";
+import React, { useRef, useMemo, useState, useEffect } from "react";
+
+//moment js
 import moment from "moment";
+//frontend bl
 import { calculateLabelLengthAndPositionWeek } from "../bl";
 //components
 import WeekViewLabel from "./view-label/WeekViewLabel";
+import { CALENDAR_STATIC_VARS } from "@/static";
 
-const WeekView = ({ labels, date, gridData }) => {
+const WeekView = ({ labels, date, gridData, dateTimeState }) => {
   //state which will containt updated labels for printing data
+  const [widthOfLabelInPx, setWidthOfLabelInPx] = useState(null);
   const [updatedLabelsForPrinting, setUpdatedLabelsForPrinting] = useState();
   const [updatedLabelsForPrintingLoading, setUpdatedLabelsForPrintingLoading] =
     useState(true);
 
+  const containerRef = useRef(null);
+  const columnRef = useRef(null);
+
+  const [timeLine, setTimeLine] = useState(null);
+
+  //  calculate where time line will be on calendar
+  useEffect(() => {
+    //date je TRENUTNI DATUM TO PROMJENI
+    const current_day = moment().isoWeekday();
+    var timelineWidth = CALENDAR_STATIC_VARS.timlineWidth;
+
+    var leftPosition = 0;
+    leftPosition = leftPosition;
+    //check timeline left position
+    if (current_day >= 1 && current_day <= 7) {
+      leftPosition = (current_day - 1) * timelineWidth;
+    }
+
+    //split minutes and hours for calculations
+    var dateTimeStateArray = dateTimeState.split(":");
+
+    //calculate position of timeline on calendar
+    var marginTopOfTimeline =
+      parseInt("13") * CALENDAR_STATIC_VARS.tableColumnHeight +
+      parseInt(dateTimeStateArray[1]) *
+        (CALENDAR_STATIC_VARS.tableColumnHeight / 60) -
+      CALENDAR_STATIC_VARS.calendarStart *
+        CALENDAR_STATIC_VARS.tableColumnHeight;
+
+    setTimeLine({
+      left: leftPosition,
+      width: timelineWidth,
+      dateArray: dateTimeStateArray,
+      marginTop: marginTopOfTimeline,
+    });
+  }, [dateTimeState]);
+
   // map throught labels and set additional atributes required for calendar
   useEffect(() => {
     var mappedLabels;
-    if (labels !== null) {
-      mappedLabels = labels.map((item) => {
+    if (labels && Array.isArray(labels)) {
+      mappedLabels = labels?.map((item) => {
         const {
           normalizeLeftPosition,
           normalizeMarginTop,
@@ -41,8 +77,15 @@ const WeekView = ({ labels, date, gridData }) => {
     }
   }, [labels]);
 
-  const containerRef = useRef(null);
-  const columnRef = useRef(null);
+  useEffect(() => {
+    const updateLabelWidth = () => {
+      if (columnRef.current) {
+        const { width } = columnRef.current.getBoundingClientRect();
+        setWidthOfLabelInPx(width);
+      }
+    };
+    updateLabelWidth();
+  }, [columnRef]);
 
   //only calculate new grid on date change
   const arrayOfWeek = useMemo(() => {
@@ -101,6 +144,7 @@ const WeekView = ({ labels, date, gridData }) => {
                       <td
                         key={i}
                         className="border-b border-r border-t border-solid px-1 bg-blue-100 bg-opacity-50 hover:bg-opacity-50 hover:bg-blue-50"
+                        style={{ width: `${100 / 7}%` }}
                       ></td>
                     );
                   } else {
@@ -109,6 +153,7 @@ const WeekView = ({ labels, date, gridData }) => {
                         ref={columnRef}
                         key={i}
                         className="border-b border-r hover:bg-slate-100 border-gray-200 border-solid px-1"
+                        style={{ width: `${100 / 7}%` }}
                       ></td>
                     );
                   }
@@ -116,8 +161,51 @@ const WeekView = ({ labels, date, gridData }) => {
               </tr>
             ))}
 
-            {/* print reservations and put them on the grid */}
+            {/* //print timeline */}
+            {timeLine
+              ? parseInt("13") >= CALENDAR_STATIC_VARS.calendarStart &&
+                parseInt(timeLine.dateArray[0]) <=
+                  CALENDAR_STATIC_VARS.calendarEnd && (
+                  <>
+                    <div
+                      style={{
+                        width: 14,
+                        height: 14,
+                        borderRadius: "50%",
+                        position: "absolute",
+                        backgroundColor: "red",
+                        zIndex: 40,
+                        left: timeLine.left + "%",
+                        top: timeLine.marginTop - 6,
+                      }}
+                    />
+                    <div
+                      id="crta_kalendar"
+                      style={{
+                        width: timeLine.width + "%",
+                        height: "1.7px",
+                        position: "absolute",
+                        zIndex: 40,
+                        top: timeLine.marginTop,
+                        left: timeLine.left + "%",
+                        backgroundColor: "red",
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: "red",
+                          marginTop: 4,
+                          marginleft: 8,
+                        }}
+                      >
+                        {dateTimeState.toString()}
+                      </div>
+                    </div>
+                  </>
+                )
+              : null}
 
+            {/* print reservations and put them on the grid */}
             {!updatedLabelsForPrintingLoading &&
               updatedLabelsForPrinting?.map((label, i) => {
                 let isLabelInActiveWeekDate = moment(date).isSame(
@@ -130,6 +218,7 @@ const WeekView = ({ labels, date, gridData }) => {
                     <WeekViewLabel
                       columnRef={columnRef}
                       containerRef={containerRef}
+                      widthOfLabelInPx={widthOfLabelInPx}
                       id={label}
                       key={i}
                       label={label}

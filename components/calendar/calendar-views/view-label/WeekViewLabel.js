@@ -9,12 +9,11 @@ import { Tag } from "antd";
 //modals
 import OnDragConfrimModal from "../../modal/OnDragConfrimModal";
 
-const WeekViewLabel = ({ label, containerRef, columnRef }) => {
+const WeekViewLabel = ({ label, containerRef, widthOfLabelInPx }) => {
   //REFS
   const elementRef = useRef(null);
 
   const [labelData, setLabelData] = useState(label);
-  const [widthOfLabelInPx, setWidthOfLabelInPx] = useState(null);
 
   const [confirmDragModalVisible, setConfirmDragModalVisible] = useState(false);
 
@@ -24,29 +23,7 @@ const WeekViewLabel = ({ label, containerRef, columnRef }) => {
   const [yCoordinate, setYCoordinate] = useState(0);
   const [xCoordinate, setXCoordinate] = useState(0);
 
-  //get one column width in px
-  useEffect(() => {
-    const updateLabelWidth = () => {
-      if (columnRef.current) {
-        const { width } = columnRef.current.getBoundingClientRect();
-        setWidthOfLabelInPx(width);
-      }
-    };
-    updateLabelWidth();
-  }, [columnRef]);
-
-  // // REINITIALIZE CALENDAR ON RESIZE
-  // const handleResize = () => {
-  //   updateLabelWidth();
-  // };
-
-  // useEffect(() => {
-  //   window.addEventListener("resize", handleResize);
-  //   return () => {
-  //     window.removeEventListener("resize", handleResize);
-  //   };
-  // }, []);
-
+  //handle drag
   const handleDrag = (_, ui) => {
     setXCoordinate(ui.x);
     setYCoordinate(ui.y);
@@ -140,7 +117,6 @@ const WeekViewLabel = ({ label, containerRef, columnRef }) => {
   };
 
   return (
-    widthOfLabelInPx !== null && (
       <>
         {isDragging && (
           <div
@@ -148,7 +124,7 @@ const WeekViewLabel = ({ label, containerRef, columnRef }) => {
             style={{
               top: label.normalizeMarginTop,
               left: `${label.normalizeLeftPosition}%`,
-              width: `${label.normalizeWidth}%`,
+              width: `${label.normalizeWidth-1}%`,
               height: label.normalizedHeight,
               opacity: isDragging ? 0.5 : 1,
             }}
@@ -169,7 +145,7 @@ const WeekViewLabel = ({ label, containerRef, columnRef }) => {
             style={{
               top: labelData.normalizeMarginTop,
               left: `${labelData.normalizeLeftPosition}%`,
-              width: `${labelData.normalizeWidth}%`,
+              width: `${labelData.normalizeWidth-1}%`,
               height: labelData.normalizedHeight,
             }}
           >
@@ -226,7 +202,6 @@ const WeekViewLabel = ({ label, containerRef, columnRef }) => {
           />
         )}
       </>
-    )
   );
 };
 

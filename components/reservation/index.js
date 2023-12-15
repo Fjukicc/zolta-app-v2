@@ -1,0 +1,213 @@
+"use client";
+import React, { useState, useEffect } from "react";
+//swr
+import useSWR from "swr";
+import { fetcher } from "@/swr/fetcher";
+//ant d
+import { Table, Button, Tag } from "antd";
+//icons
+import { FaUser, FaClock } from "react-icons/fa";
+//moment js
+import moment from "moment";
+//session
+import { useSession } from "next-auth/react";
+import RentHeader from "./RentHeader";
+
+const { Column } = Table;
+
+const Reservations = () => {
+  //session
+  const { data: session, status: sessionStatus } = useSession();
+
+  //
+  const [selectedEmployee, setSelectedEmployee] = useState();
+
+  //fetch employess
+  const {
+    data: employeesData,
+    error: employeesError,
+    isLoading: employeesLoading,
+  } = useSWR(
+    session
+      ? `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/admin?company_id=${session.user.company_id}`
+      : null,
+    fetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
+
+  //fetch reservations
+  const {
+    data: rentsData,
+    error: rentsError,
+    isLoading: rentsLoading,
+    mutate: mutateReservations,
+  } = useSWR(
+    selectedEmployee
+      ? `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${selectedEmployee.id}`
+      : null,
+    fetcher
+  );
+
+  //STATES
+  const [searchRent, setSearchRent] = useState("");
+
+  //set initial worker
+  useEffect(() => {
+    const setInitialWorker = () => {
+      if (
+        sessionStatus === "authenticated" &&
+        !employeesLoading &&
+        employeesData
+      ) {
+        let selected_employee;
+        employeesData.forEach((e) => {
+          if (e.id === session.user.id) {
+            selected_employee = {
+              ...e,
+              value: e.name,
+              label: e.name,
+            };
+          }
+        });
+        setSelectedEmployee(selected_employee);
+      }
+    };
+    setInitialWorker();
+  }, [session, sessionStatus, employeesData]);
+
+  console.log(rentsData);
+
+  return (
+    <div className=" w-full min-h-full pl-6 pr-6 pt-1">
+      {/* header for rents */}
+      <RentHeader
+        setSearchRent={setSearchRent}
+        searchRent={searchRent}
+        employeesData={employeesData}
+        setSelectedEmployee={setSelectedEmployee}
+        selectedEmployee={selectedEmployee}
+      />
+      {/* content */}
+      <div className="w-full">
+        {" "}
+        <Table
+          pagination={false}
+          size="large"
+          dataSource={rentsData}
+          rowKey="id"
+          className="w-full"
+        >
+          {/* Timeframe or rent */}
+          <Column
+            title={"Period"}
+            dataIndex="period"
+            key="period"
+            render={(text, record, index) => {
+              return (
+                <div className="flex items-center">
+                  <FaClock size={16} className="mr-3" />
+                  <div className="font-medium text-md">
+                    {moment(record.start_time, "hh:mm:ss").format("hh:mm")} -{" "}
+                    {moment(record.end_time, "hh:mm:ss").format("hh:mm")}
+                  </div>
+                </div>
+              );
+            }}
+          />
+          {/* Employee name */}
+          <Column
+            title={"Ime Zaposlenika"}
+            dataIndex="name_of_provider"
+            key="name_of_provider"
+            render={(text, record, index) => {
+              return (
+                <div className="flex items-center">
+                  <FaUser size={16} className="mr-2" />{" "}
+                  <div className="font-medium text-md">{record.admin_name}</div>
+                </div>
+              );
+            }}
+          />
+          {/* user that is appointed */}
+          <Column
+            title={"Naručena Osoba"}
+            dataIndex="name_of_user"
+            key="name_of_user"
+            render={(text, record, index) => {
+              return (
+                <div className="flex items-center">
+                  <div className="font-medium text-md">{record.name}</div>
+                </div>
+              );
+            }}
+          />
+          {/* services */}
+          <Column
+            title={"Servisi"}
+            dataIndex="service"
+            key="service"
+            render={(text, record, index) => {
+              return (
+                <div className="flex items-center">
+                  {/* <FaFileMedical size={18} className="mr-2" /> */}
+                  <div className="flex flex-row">
+                    {record.service_name.map((service, index) => (
+                      <Tag color="blue" key={index}>
+                        {service}
+                      </Tag>
+                    ))}
+                  </div>
+                </div>
+              );
+            }}
+          />
+          {/* status */}
+          <Column
+            title={"Status"}
+            dataIndex="status"
+            key="status"
+            render={(text, record, index) => {
+              return (
+                <div className="flex items-center">
+                  {record.status === "Active" && (
+                    <Tag color="success">Aktivna</Tag>
+                  )}
+                  {record.status === "Inactive" && (
+                    <Tag color="error">Neaktivna</Tag>
+                  )}
+                </div>
+              );
+            }}
+          />
+          {/* <Button type="link" block>
+      Link
+    </Button> */}
+          <Column
+            title={"Akcije"}
+            dataIndex="actions"
+            key="action"
+            render={(text, record, index) => {
+              return (
+                <div className="flex items-center">
+                  <Button type="link">Uredi</Button>
+                  <Button
+                    type="link"
+                    className="text-red-500 hover:text-red-500"
+                  >
+                    Izbriši
+                  </Button>
+                </div>
+              );
+            }}
+          />
+        </Table>
+      </div>
+    </div>
+  );
+};
+
+export default Reservations;

@@ -3,20 +3,42 @@ import React, { useRef, useEffect, useState } from "react";
 import { calculateLabelLengthAndPositionDay } from "../bl";
 // moment js
 import moment from "moment";
+
 //components
 import DayViewLabel from "./view-label/DayViewLabel";
+//static
+import { CALENDAR_STATIC_VARS } from "@/static";
 
-const DayView = ({ gridData, date, labels }) => {
+const DayView = ({ gridData, date, labels, dateTimeState }) => {
   //state which will containt updated labels for printing data
   const [updatedLabelsForPrinting, setUpdatedLabelsForPrinting] =
     useState(null);
   const [updatedLabelsForPrintingLoading, setUpdatedLabelsForPrintingLoading] =
     useState(true);
 
+  //state for local day line
+  const [timeLine, setTimeLine] = useState(null);
+
+  //  calculate where time line will be on calendar
+  useEffect(() => {
+    var dateTimeStateArray = dateTimeState.split(":");
+    //calculate position of timeline on calendar
+    var marginTopOfTimeline =
+      parseInt(dateTimeStateArray[0]) * CALENDAR_STATIC_VARS.tableColumnHeight +
+      parseInt(dateTimeStateArray[1]) *
+        (CALENDAR_STATIC_VARS.tableColumnHeight / 60) -
+      CALENDAR_STATIC_VARS.calendarStart *
+        CALENDAR_STATIC_VARS.tableColumnHeight;
+
+    setTimeLine({
+      dateArray: dateTimeStateArray,
+      marginTop: marginTopOfTimeline,
+    });
+  }, [dateTimeState]);
+
   useEffect(() => {
     var mappedLabels;
-    debugger;
-    if (labels !== null) {
+    if (labels && Array.isArray(labels)) {
       mappedLabels = labels.map((item) => {
         const { normalizeMarginTop, normalizedTimeDifference } =
           calculateLabelLengthAndPositionDay(item);
@@ -54,6 +76,36 @@ const DayView = ({ gridData, date, labels }) => {
                 <td className="border-t border-b border-r border-gray-200 border-solid px-6"></td>
               </tr>
             ))}
+
+            {timeLine
+              ? parseInt(timeLine.dateArray[0]) >=
+                  CALENDAR_STATIC_VARS.calendarStart &&
+                parseInt(timeLine.dateArray[0]) <=
+                  CALENDAR_STATIC_VARS.calendarEnd && (
+                  <div
+                    id="crta_kalendar"
+                    style={{
+                      height: "1.7px",
+                      position: "absolute",
+                      top: timeLine.marginTop,
+                      right: 0,
+                      zIndex: 999,
+                      backgroundColor: "red",
+                    }}
+                    className="w-11/12"
+                  >
+                    <div
+                      style={{
+                        color: "red",
+                        marginTop: 4,
+                        marginleft: 8,
+                      }}
+                    >
+                      {dateTimeState.toString()}
+                    </div>
+                  </div>
+                )
+              : null}
 
             {/* print reservations and put them on the grid */}
             {!updatedLabelsForPrintingLoading &&

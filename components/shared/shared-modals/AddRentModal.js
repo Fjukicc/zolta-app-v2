@@ -6,12 +6,12 @@ import moment from "moment";
 //session
 import { useSession } from "next-auth/react";
 //employess endpoint
-import { fetchEmployess } from "@/services/employess";
-import { fetchServices } from "@/services/services";
 import { addNewReservation } from "@/services/reservation";
 //components
-import PrimaryButton from "@/components/buttons/PrimaryButton";
 import CustomInput from "../input/CustomInput";
+//swr
+import useSWR from "swr";
+import { fetcher } from "@/swr/fetcher";
 
 const { TextArea } = Input;
 //format time in time picker
@@ -21,6 +21,8 @@ const AddRentModal = ({
   isAddReservationModalOpen,
   setIsAddReservationModalOpen,
   employess,
+  handleNewReservationForAdminCalendar,
+  setIsRentsRefetching,
 }) => {
   //session
   const { data: session, status: sessionStatus } = useSession();
@@ -50,34 +52,22 @@ const AddRentModal = ({
   const [addNewReservationError, setAddNewReservationError] = useState(false);
   const [inputReservationError, setInputReservationError] = useState(false);
 
-  //state employess and services for dropdown data
-  // const [employess, setEmployess] = useState(null);
-  const [employessError, setEmployessError] = useState(false);
-
-  const [services, setServices] = useState(null);
-  const [servicesError, setServicesError] = useState(false);
-
-  //fetch services
-  useEffect(() => {
-    const fetchServicesFunction = async () => {
-      if (
-        sessionStatus === "authenticated" &&
-        session?.user?.company_id &&
-        !services
-      ) {
-        const companyId = session.user.company_id;
-        const data = await fetchServices(companyId);
-        if (data.success) {
-          setServices(data.data);
-          setServicesError(false);
-        } else {
-          setServicesError(true);
-        }
-      }
-    };
-
-    fetchServicesFunction();
-  }, [session, sessionStatus, services]);
+  //fetch services data
+  const {
+    data: services,
+    error: servicesError,
+    isLoading: serviceLoading,
+  } = useSWR(
+    session
+      ? `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/service?company_id=${session.user.company_id}`
+      : null,
+    fetcher,
+    {
+      revalidateIfStale: false,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
+  );
 
   //set initial worker
   useEffect(() => {
@@ -91,6 +81,10 @@ const AddRentModal = ({
         };
       }
       setSelectedWorker(selected_employee);
+      setNewReservation({
+        ...newReservation,
+        reservationAdminId: selected_employee.id,
+      });
     });
   }, [session, sessionStatus, employess]);
 
@@ -120,7 +114,6 @@ const AddRentModal = ({
     setEndTime(null);
     setAddNewReservationError(false);
     setInputReservationError(false);
-    setEmployessError(false);
   };
 
   //on add new reservation modal cancel
@@ -134,6 +127,7 @@ const AddRentModal = ({
 
   //   handle on ok click modal
   const handleModalOk = () => {
+    console.log(newReservation);
     if (
       newReservation.reservationAdminId === null ||
       newReservation.serviceId === null ||
@@ -143,6 +137,7 @@ const AddRentModal = ({
       newReservation.startTime === null ||
       newReservation.endTime === null
     ) {
+      setIsRentsRefetching(true);
       setInputReservationError(true);
       setAddNewReservationError(false);
     } else {
@@ -174,6 +169,7 @@ const AddRentModal = ({
       //empty modal inputs and pickers
       resetLabel();
       onSuccessfullRentCreate();
+      handleNewReservationForAdminCalendar(selectedWorker.id, date);
     } else {
       setAddNewReservationError(true);
     }
@@ -231,6 +227,7 @@ const AddRentModal = ({
       content: "Uspješno ste kreirali rezervaciju",
     });
   };
+
   return (
     <>
       {contextHolder}
@@ -253,52 +250,58 @@ const AddRentModal = ({
         </div>
 
         {/* All services to select */}
-        <div className=" mb-2">
-          <div>Odaberi servis:</div>
-          <Select
-            showSearch
-            style={{ width: "100%" }}
-            optionFilterProp="children"
-            mode="multiple"
-            value={selectedService}
-            placeholder="Odaberi Servis"
-            options={(services || []).map((service) => ({
-              ...service,
-              value: service.name,
-              label: service.name,
-            }))}
-            onChange={(value, selectedOptions) => {
-              //selected options give us all options so we need to map thorugh the options to extract ids and set them to selected services
-              var serviceIdsFromSelectedOptions = [];
-              selectedOptions.forEach((service) => {
-                serviceIdsFromSelectedOptions.push(service.id);
-              });
-
-              //set extracted is to new reservation
-              setNewReservation({
-                ...newReservation,
-                serviceId: serviceIdsFromSelectedOptions,
-              });
-
-              //set selected services
-              setSelectedService(selectedOptions);
-              if (startTime) {
-                //calculate all selected services duration
-                var duration = 0;
+        {!serviceLoading ? (
+          <div className=" mb-2">
+            <div>Odaberi servis:</div>
+            <Select
+              showSearch
+              style={{ width: "100%" }}
+              optionFilterProp="children"
+              mode="multiple"
+              value={selectedService}
+              placeholder="Odaberi Servis"
+              options={(services || []).map((service) => ({
+                ...service,
+                value: service.name,
+                label: service.name,
+              }))}
+              onChange={(value, selectedOptions) => {
+                //selected options give us all options so we need to map thorugh the options to extract ids and set them to selected services
+                var serviceIdsFromSelectedOptions = [];
                 selectedOptions.forEach((service) => {
-                  duration += service.duration;
+                  serviceIdsFromSelectedOptions.push(service.id);
                 });
-                //calculations for ending time input value
-                let new_end_date = moment(newReservation.startTime, "HH:mm");
-                new_end_date.add(duration, "minutes");
-                setEndTime(new_end_date);
+
+                //set extracted is to new reservation
+                setNewReservation({
+                  ...newReservation,
+                  serviceId: serviceIdsFromSelectedOptions,
+                });
+
+                //set selected services
+                setSelectedService(selectedOptions);
+                if (startTime) {
+                  //calculate all selected services duration
+                  var duration = 0;
+                  selectedOptions.forEach((service) => {
+                    duration += service.duration;
+                  });
+                  //calculations for ending time input value
+                  let new_end_date = moment(newReservation.startTime, "HH:mm");
+                  new_end_date.add(duration, "minutes");
+                  setEndTime(new_end_date);
+                }
+              }}
+              filterOption={(input, option) =>
+                (option?.label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
               }
-            }}
-            filterOption={(input, option) =>
-              (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
-            }
-          />
-        </div>
+            />
+          </div>
+        ) : (
+          "Loading"
+        )}
 
         {/* select employee */}
         <div className="mb-2">

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 //ant d
-import { Table, Input, Typography, Tag, Button, Popconfirm } from "antd";
+import { Table, Typography, Tag, Button, Popconfirm } from "antd";
 //react icons
 import { MdOutlineMiscellaneousServices } from "react-icons/md";
 import { FaEuroSign } from "react-icons/fa";

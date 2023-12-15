@@ -9,21 +9,6 @@ import { SettingOutlined } from "@ant-design/icons";
 import PrimaryButton from "../buttons/PrimaryButton";
 import PrimaryIconButton from "../buttons/PrimaryIconButton";
 
-const fakeWorkers = [
-  {
-    value: "jack",
-    label: "Jack",
-  },
-  {
-    value: "lucy",
-    label: "Lucy",
-  },
-  {
-    value: "tom",
-    label: "Tom",
-  },
-];
-
 const Header = ({
   setDate,
   date,
@@ -38,19 +23,23 @@ const Header = ({
   setSelectedEmployee,
   selectedEmployee,
   fetchReservationsForNewAdmin,
-  setIsRentsRefetching
+  setIsRentsRefetching,
 }) => {
   // console.log(selectedEmployee);
   const [daysInWeek, setDaysInWeek] = useState([]);
+  const [activeDate, setActiveDate] = useState();
   //generate week
   useEffect(() => {
     const moment_date = moment(date, "YYYY-MM-DD");
 
-    if (calendarView === "Week") {
-      //start and end of week by given date
-      const startOfWeek = moment_date.clone().startOf("isoWeek");
-      const endOfWeek = startOfWeek.clone().add(6, "days");
+    //start and end of week by given date
+    const startOfWeek = moment_date.clone().startOf("isoWeek");
+    const endOfWeek = startOfWeek.clone().add(6, "days");
 
+    const startOfWeekShowing = moment_date.startOf("isoWeek");
+    const endOfWeekShowing = moment_date.clone().add(6, "days");
+
+    if (calendarView === "Week") {
       //generate week from those dates
       let weekDates = [];
 
@@ -63,12 +52,18 @@ const Header = ({
           dayNumber: d.format("D"),
         });
       }
-
       setDaysInWeek(weekDates);
     }
+    if (calendarView === "Week") {
+      setActiveDate(
+        `${startOfWeekShowing.format("DD.MM.YYYY.").toString()} - ${endOfWeekShowing
+          .format("DD.MM.YYYY.")
+          .toString()}`
+      );
+    } else {
+      setActiveDate(null);
+    }
   }, [date, calendarView]);
-
-  const onChangeWorkerHandler = () => {};
 
   //handle on day click on week view
   const onDayClickCircleHandler = (dayObj) => {
@@ -112,6 +107,9 @@ const Header = ({
 
         {/* {right side} */}
         <div className="flex flex-row items-center">
+          <div className="mr-8 text-xl font-bold">
+            {activeDate ? activeDate : null}
+          </div>
           <Select
             showSearch
             placeholder="Odaberi Zaposlenika"
@@ -188,9 +186,21 @@ const Header = ({
           </div>
         ) : (
           <div>
-            <p className="max-w-md text-3xl font-semibold leading-normal text-gray-900 dark:text-white">
-              {moment(date).format("DD.MM.yyyy").toString()}
-            </p>
+            {moment(date, "YYYY-MM-DD").isSame(
+              moment().format("YYYY-MM-DD")
+            ) ? (
+              <p className="max-w-md text-3xl font-semibold leading-normal text-green-400">
+                {/* print date and day in list and day view */}
+                {moment(date).format("DD.MM.yyyy.").toString()} -{" "}
+                {moment(date).format("dddd")}
+              </p>
+            ) : (
+              <p className="max-w-md text-3xl font-semibold leading-normal text-gray-900">
+                {/* print date and day in list and day view */}
+                {moment(date).format("DD.MM.yyyy.").toString()} -{" "}
+                {moment(date).format("dddd")}
+              </p>
+            )}
           </div>
         )}
       </Row>
