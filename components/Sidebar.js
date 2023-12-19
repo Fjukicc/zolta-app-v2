@@ -4,14 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
-  AppstoreOutlined,
-  ContainerOutlined,
   CalendarOutlined,
-  MailOutlined,
-  PieChartOutlined,
+  LogoutOutlined,
+  HomeOutlined,
+  UserOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
-import { MdOutlineHexagon } from "react-icons/md";
-import { IoMdQrScanner } from "react-icons/io";
+import { MdOutlineHexagon, MdOutlineRoomService } from "react-icons/md";
 import { Menu } from "antd";
 
 function getItem(label, key, icon, children, type) {
@@ -28,15 +27,19 @@ const items = [
   getItem(
     <Link href={"/dashboard"}>Početna</Link>,
     "/dashboard",
-    <PieChartOutlined />
+    <HomeOutlined />
   ),
   getItem(
     <Link href={"/dashboard/calendar-page"}>Kalendar</Link>,
     "/dashboard/calendar-page",
     <CalendarOutlined />
   ),
-  // getItem("Invoices", "3", <ContainerOutlined />),
-  getItem("Services", "4", <MailOutlined />, [
+  getItem(
+    <Link href={"/dashboard/calendar-page"}>Users</Link>,
+    "/dashboard/users",
+    <UserOutlined />
+  ),
+  getItem("Services", "4", <MdOutlineRoomService />, [
     getItem(
       <Link href={"/dashboard/services"}>Servisi</Link>,
       "/dashboard/services"
@@ -51,19 +54,12 @@ const items = [
     "/dashboard/rents",
     <MdOutlineHexagon />
   ),
-  // getItem(
-  //   <Link href={"/dashboard/xray-scan"}>X-Ray</Link>,
-  //   "/dashboard/xray-scan",
-  //   <IoMdQrScanner />
-  // ),
-  // getItem("Navigation Two", "sub2", <AppstoreOutlined />, [
-  //   getItem("Option 9", "9"),
-  //   getItem("Option 10", "10"),
-  //   getItem("Submenu", "sub3", null, [
-  //     getItem("Option 11", "11"),
-  //     getItem("Option 12", "12"),
-  //   ]),
-  // ]),
+  getItem(
+    <Link href={"/dashboard/settings"}>Postavke</Link>,
+    "/dashboard/settings",
+    <SettingOutlined />
+  ),
+  getItem(<div>Logout</div>, "/dashboard/logout", <LogoutOutlined />),
 ];
 
 const AppSidebar = () => {

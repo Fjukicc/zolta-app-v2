@@ -154,13 +154,13 @@ const DayViewLabel = ({ label, containerRef }) => {
             <div>
               <span>
                 {moment(labelData.start_time, "HH:mm:ss")
-                  .format("HH:mm:ss")
+                  .format("HH:mm")
                   .toString()}
               </span>
               -
               <span>
                 {moment(labelData.end_time, "HH:mm:ss")
-                  .format("HH:mm:ss")
+                  .format("HH:mm")
                   .toString()}
               </span>
             </div>

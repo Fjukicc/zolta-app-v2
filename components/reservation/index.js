@@ -6,12 +6,14 @@ import { fetcher } from "@/swr/fetcher";
 //ant d
 import { Table, Button, Tag } from "antd";
 //icons
-import { FaUser, FaClock } from "react-icons/fa";
+import { FaUser, FaClock, FaCalendar } from "react-icons/fa";
 //moment js
 import moment from "moment";
 //session
 import { useSession } from "next-auth/react";
+//components
 import RentHeader from "./RentHeader";
+import AddRentModal from "../shared/shared-modals/AddRentModal";
 
 const { Column } = Table;
 
@@ -19,8 +21,14 @@ const Reservations = () => {
   //session
   const { data: session, status: sessionStatus } = useSession();
 
-  //
+  //selected employee
   const [selectedEmployee, setSelectedEmployee] = useState();
+  //modal
+  const [isAddReservationModalOpen, setIsAddReservationModalOpen] =
+    useState(false);
+  //are rent refetching
+  const [isRentsRefetching, setIsRentsRefetching] = useState(false);
+  const [searchRent, setSearchRent] = useState("");
 
   //fetch employess
   const {
@@ -52,8 +60,38 @@ const Reservations = () => {
     fetcher
   );
 
-  //STATES
-  const [searchRent, setSearchRent] = useState("");
+  //handle updating calendar if new rent is created and switch calendar to current user and week
+  const handleNewReservationForAdmin = async (selected_worker_id, date) => {
+    var new_employee = {};
+
+    employeeData.forEach((emp) => {
+      if (emp.id === selected_worker_id) {
+        new_employee = {
+          ...emp,
+          value: emp.name,
+          label: emp.name,
+        };
+      }
+    });
+
+    setSelectedEmployee(new_employee);
+    const toNormalDate = date.toDate();
+
+    if (calendarView === "Week") {
+      const nextWeek = moment(toNormalDate)
+        .startOf("isoWeek")
+        .format("YYYY-MM-DD");
+      setDate(nextWeek);
+    } else {
+      // setDate(moment(date).format("YYYY-MM-DD"));
+      const newDate = moment(toNormalDate, "YYYY-MM-DD").format("YYYY-MM-DD");
+      setDate(newDate);
+    }
+    const newUrl = `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${selected_worker_id}`;
+    await mutateReservations(newUrl);
+
+    setIsRentsRefetching(false);
+  };
 
   //set initial worker
   useEffect(() => {
@@ -90,6 +128,7 @@ const Reservations = () => {
         employeesData={employeesData}
         setSelectedEmployee={setSelectedEmployee}
         selectedEmployee={selectedEmployee}
+        setIsAddReservationModalOpen={setIsAddReservationModalOpen}
       />
       {/* content */}
       <div className="w-full">
@@ -101,6 +140,24 @@ const Reservations = () => {
           rowKey="id"
           className="w-full"
         >
+          {/* Rent date */}
+          <Column
+            title={"Date"}
+            dataIndex="date"
+            key="date"
+            render={(text, record, index) => {
+              return (
+                <div className="flex items-center">
+                  <FaCalendar size={16} className="mr-3" />
+                  <div className="font-medium text-md">
+                    {moment(record.date, "YYYY-MM-DD")
+                      .format("DD.MM.YYYY.")
+                      .toString()}
+                  </div>
+                </div>
+              );
+            }}
+          />
           {/* Timeframe or rent */}
           <Column
             title={"Period"}
@@ -206,6 +263,15 @@ const Reservations = () => {
           />
         </Table>
       </div>
+      {employeesData && (
+        <AddRentModal
+          isAddReservationModalOpen={isAddReservationModalOpen}
+          setIsAddReservationModalOpen={setIsAddReservationModalOpen}
+          employess={employeesData}
+          handleNewReservationForAdminCalendar={handleNewReservationForAdmin}
+          setIsRentsRefetching={setIsRentsRefetching}
+        />
+      )}
     </div>
   );
 };

@@ -223,7 +223,6 @@ const Calendar = () => {
   const todayButtonClick = () => {
     setDate(moment().format("YYYY-MM-DD"));
   };
-  //DAYS WEEK NAVIGATION FUNCTIONS END
 
   //is component in loading state
   if (
