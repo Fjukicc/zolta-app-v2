@@ -26,7 +26,6 @@ const ServiceDetails = ({ service_id }) => {
   );
 
   //   service data that keeps changes
-
   const [activeServiceData, setActiveServiceData] = useState();
 
   React.useEffect(() => {

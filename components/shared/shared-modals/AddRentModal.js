@@ -334,7 +334,7 @@ const AddRentModal = ({
         <div className="mb-2">
           <div>Vaša Nota</div>
           <TextArea
-            placeholder="Dodatna noda o rezervaciji"
+            placeholder="Dodatna nota o rezervaciji"
             rows={4}
             value={newReservation.description}
             onChange={(newValue) =>
@@ -366,7 +366,7 @@ const AddRentModal = ({
             <TimePicker
               placeholder="Početno Vrijeme"
               disabled={
-                newReservation.reservationDate && selectedService ? false : true
+                newReservation.reservationDate && selectedService.length > 0 ? false : true
               }
               value={startTime}
               minuteStep={5}
@@ -378,7 +378,7 @@ const AddRentModal = ({
             <div>Krajnje vrijeme:</div>
             <TimePicker
               placeholder="Krajnje Vrijeme"
-              disabled={newReservation.reservationDate ? false : true}
+              disabled={newReservation.reservationDate && selectedService.length > 0 ? false : true}
               // disabledHours
               // disabledMinutes
               value={endTime}

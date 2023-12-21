@@ -1,10 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 //swr
 import useSWR from "swr";
 import { fetcher } from "@/swr/fetcher";
 //ant d
-import { Table, Button, Tag } from "antd";
+import { Table, Button, Tag, Popconfirm, message } from "antd";
 //icons
 import { FaUser, FaClock, FaCalendar } from "react-icons/fa";
 //moment js
@@ -14,6 +15,7 @@ import { useSession } from "next-auth/react";
 //components
 import RentHeader from "./RentHeader";
 import AddRentModal from "../shared/shared-modals/AddRentModal";
+import { deleteReservation } from "@/services/reservation";
 
 const { Column } = Table;
 
@@ -21,14 +23,23 @@ const Reservations = () => {
   //session
   const { data: session, status: sessionStatus } = useSession();
 
-  //selected employee
-  const [selectedEmployee, setSelectedEmployee] = useState();
+  //for messages
+  const [messageApi, contextHolder] = message.useMessage();
+
   //modal
   const [isAddReservationModalOpen, setIsAddReservationModalOpen] =
     useState(false);
   //are rent refetching
   const [isRentsRefetching, setIsRentsRefetching] = useState(false);
-  const [searchRent, setSearchRent] = useState("");
+
+  const [isIntervalCheckboxClicked, setIsIntervakCheckboxClicked] =
+    useState(false);
+
+  const [searchOptions, setSearchOptions] = useState({
+    fromDate: moment(),
+    untilDate: null,
+    selectedEmployee: null,
+  });
 
   //fetch employess
   const {
@@ -54,8 +65,23 @@ const Reservations = () => {
     isLoading: rentsLoading,
     mutate: mutateReservations,
   } = useSWR(
-    selectedEmployee
-      ? `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${selectedEmployee.id}`
+    searchOptions.selectedEmployee
+      ? searchOptions.untilDate === null
+        ? `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${
+            searchOptions.selectedEmployee.id
+          }&range_start_date=${moment(searchOptions.fromDate)
+            .format("YYYY-MM-DD")
+            .toString()}&range_end_date=${moment(searchOptions.fromDate)
+            .add(1, "day")
+            .format("YYYY-MM-DD")
+            .toString()}`
+        : `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${
+            searchOptions.selectedEmployee.id
+          }&range_start_date=${moment(searchOptions.fromDate)
+            .format("YYYY-MM-DD")
+            .toString()}&range_end_date=${moment(searchOptions.untilDate)
+            .format("YYYY-MM-DD")
+            .toString()}`
       : null,
     fetcher
   );
@@ -64,7 +90,7 @@ const Reservations = () => {
   const handleNewReservationForAdmin = async (selected_worker_id, date) => {
     var new_employee = {};
 
-    employeeData.forEach((emp) => {
+    employeesData.forEach((emp) => {
       if (emp.id === selected_worker_id) {
         new_employee = {
           ...emp,
@@ -74,23 +100,14 @@ const Reservations = () => {
       }
     });
 
-    setSelectedEmployee(new_employee);
-    const toNormalDate = date.toDate();
-
-    if (calendarView === "Week") {
-      const nextWeek = moment(toNormalDate)
-        .startOf("isoWeek")
-        .format("YYYY-MM-DD");
-      setDate(nextWeek);
-    } else {
-      // setDate(moment(date).format("YYYY-MM-DD"));
-      const newDate = moment(toNormalDate, "YYYY-MM-DD").format("YYYY-MM-DD");
-      setDate(newDate);
-    }
-    const newUrl = `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation?admin_id=${selected_worker_id}`;
-    await mutateReservations(newUrl);
-
-    setIsRentsRefetching(false);
+    setSearchOptions({
+      ...searchOptions,
+      selectedEmployee: new_employee,
+      untilDate: null,
+      fromDate: moment(date.toDate()).format("YYYY-MM-DD"),
+    });
+    setIsIntervakCheckboxClicked(false);
+    await mutateReservations();
   };
 
   //set initial worker
@@ -111,24 +128,76 @@ const Reservations = () => {
             };
           }
         });
-        setSelectedEmployee(selected_employee);
+        setSearchOptions({
+          ...searchOptions,
+          selectedEmployee: selected_employee,
+        });
       }
     };
     setInitialWorker();
   }, [session, sessionStatus, employeesData]);
 
-  console.log(rentsData);
+  //is checkbox for multiple dates checked
+  const onIntervalCheckboxChange = (e) => {
+    setIsIntervakCheckboxClicked(e.target.checked);
+    if (e.target.checked === true) {
+      setSearchOptions({
+        ...searchOptions,
+        untilDate: moment(searchOptions.fromDate, "YYYY-MM-DD").add(1, "week"),
+      });
+    } else {
+      setSearchOptions({
+        ...searchOptions,
+        untilDate: null,
+      });
+    }
+  };
+
+  //delete rent
+  const onDeleteReservationClick = async (record) => {
+    const rent_id = record.id;
+    const response = await deleteReservation(rent_id);
+    if (response.success) {
+      successRentDelete(record);
+      await mutateReservations();
+    } else {
+      errorRentDelete();
+    }
+  };
+
+  const successRentDelete = (record) => {
+    messageApi.open({
+      type: "success",
+      content: `Uspješno izbrisana rezervacija, ${moment(
+        record.date,
+        "YYYY-MM-DD"
+      )
+        .format("DD.MM.YYYY.")
+        .toString()}, od ${moment(record.start_time, "hh:mm:ss").format(
+        "HH:mm"
+      )} do ${moment(record.end_time, "hh:mm:ss").format("HH:mm")}`,
+    });
+  };
+
+  const errorRentDelete = () => {
+    messageApi.open({
+      type: "Greška",
+      content: "Nismo uspjeli izbrisati rezervaciju",
+    });
+  };
 
   return (
     <div className=" w-full min-h-full pl-6 pr-6 pt-1">
+      {contextHolder}
       {/* header for rents */}
       <RentHeader
-        setSearchRent={setSearchRent}
-        searchRent={searchRent}
         employeesData={employeesData}
-        setSelectedEmployee={setSelectedEmployee}
-        selectedEmployee={selectedEmployee}
+        searchOptions={searchOptions}
+        setSearchOptions={setSearchOptions}
         setIsAddReservationModalOpen={setIsAddReservationModalOpen}
+        mutateReservations={mutateReservations}
+        onIntervalCheckboxChange={onIntervalCheckboxChange}
+        isIntervalCheckboxClicked={isIntervalCheckboxClicked}
       />
       {/* content */}
       <div className="w-full">
@@ -138,7 +207,7 @@ const Reservations = () => {
           size="large"
           dataSource={rentsData}
           rowKey="id"
-          className="w-full"
+          className="w-full pb-8"
         >
           {/* Rent date */}
           <Column
@@ -168,8 +237,8 @@ const Reservations = () => {
                 <div className="flex items-center">
                   <FaClock size={16} className="mr-3" />
                   <div className="font-medium text-md">
-                    {moment(record.start_time, "hh:mm:ss").format("hh:mm")} -{" "}
-                    {moment(record.end_time, "hh:mm:ss").format("hh:mm")}
+                    {moment(record.start_time, "hh:mm:ss").format("HH:mm")} -{" "}
+                    {moment(record.end_time, "hh:mm:ss").format("HH:mm")}
                   </div>
                 </div>
               );
@@ -250,13 +319,30 @@ const Reservations = () => {
             render={(text, record, index) => {
               return (
                 <div className="flex items-center">
-                  <Button type="link">Uredi</Button>
-                  <Button
-                    type="link"
-                    className="text-red-500 hover:text-red-500"
+                  <Link
+                    href={{
+                      pathname: "/dashboard/rents/rent-details",
+                      query: {
+                        rent_id: record.id,
+                      },
+                    }}
                   >
-                    Izbriši
-                  </Button>
+                    <Button type="link">Uredi</Button>
+                  </Link>
+                  <Popconfirm
+                    title="Brisanje Rezervacije"
+                    description="Jeste li sigurni da želite izbrisati rezervaciju?"
+                    okText="Da"
+                    cancelText="Ne"
+                    onConfirm={(e) => onDeleteReservationClick(record)}
+                  >
+                    <Button
+                      type="link"
+                      className="text-red-500 hover:text-red-500"
+                    >
+                      Izbriši
+                    </Button>
+                  </Popconfirm>
                 </div>
               );
             }}
