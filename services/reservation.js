@@ -65,30 +65,46 @@ export const deleteReservation = async (rent_id) => {
       throw new Error("Failed to delete reservations!");
     }
 
-    const new_rent = await data.json();
+    const deleted_rent = await data.json();
 
     // if result is false
-    if (new_rent.result === false) {
-      return {
-        success: false,
-        error: "Failed to delete reservations!",
-      };
+    if (deleted_rent.result === false) {
+      throw new Error("Failed to delete rent!");
     }
 
     //return success
     return {
       success: true,
     };
-
   } catch (error) {
+    console.error(error);
     return {
       success: false,
-      error: "Failed to delete reservations!",
+      error: error,
     };
   }
 };
 
 //update reservation
-export const updateReservation = async (params) =>{
+export const updateReservation = async (rent) => {
+  try {
+    const data = await fetch(
+      "http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/reservation",
+      {
+        method: "PATCH",
+        body: JSON.stringify(rent),
+      }
+    );
 
-}
+    if (!data.ok) {
+      throw new Error("Failed to update rent");
+    }
+
+    let updated_rent = await data.json();
+
+    return { success: true, data: updated_rent };
+  } catch (error) {
+    console.error(error);
+    return { success: false, error: error };
+  }
+};

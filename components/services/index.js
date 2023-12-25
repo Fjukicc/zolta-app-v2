@@ -20,6 +20,8 @@ import Link from "next/link";
 //swr
 import useSWR from "swr";
 import { fetcher } from "@/swr/fetcher";
+//api
+import { deleteService } from "@/services/services";
 
 const { Text } = Typography;
 
@@ -41,6 +43,7 @@ const Services = () => {
     data: servicesData,
     error: serviceError,
     isLoading: servicesLoading,
+    mutate: mutateServices,
   } = useSWR(
     session
       ? `http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/service?company_id=${session.user.company_id}`
@@ -57,15 +60,52 @@ const Services = () => {
     setSearchedText(text);
   };
 
-  //handle creating new service
-  const handleAddNewService = async () => {};
+  //show success message when new service is created
+  const successAddingNewService = (newService) => {
+    messageApi.open({
+      type: "success",
+      content: `Uspješno ste dodali novi servis: ${newService.name} `,
+    });
+  };
 
-  //handle delete service
-  const onDeleteServicesClick = (record) => {};
+  const successMessage = (message) => {
+    messageApi.open({
+      type: "success",
+      content: message,
+    });
+  };
+
+  const errorMessage = (message) => {
+    messageApi.open({
+      type: "error",
+      content: message,
+    });
+  };
+
+  //handle creating new service
+  const handleAddNewService = async (newService) => {
+    successAddingNewService(newService);
+    mutateServices();
+  };
+
+  const handleDeleteService = async (record) => {
+    const service_id = record.id;
+    const result = await deleteService(service_id);
+    if (result.success === true) {
+      successMessage(`Izbrisan servis: ${record.name}`);
+      mutateServices();
+    } else if (result.success === false) {
+      errorMessage(`Nemožemo izbrisati servis: ${record.name}`);
+    }
+  };
 
   //handle error fetching services
   if (serviceError) {
     return <div>Error</div>;
+  }
+
+  if (!session) {
+    return "Loading...";
   }
 
   return (
@@ -246,7 +286,7 @@ const Services = () => {
                     description="Jeste li sigurni da želite izbrisati servis?"
                     okText="Da"
                     cancelText="Ne"
-                    onConfirm={(e) => onDeleteServicesClick(record)}
+                    onConfirm={(e) => handleDeleteService(record)}
                   >
                     <Button
                       type="link"
@@ -264,6 +304,7 @@ const Services = () => {
           isAddNewServiceModalOpen={isAddServiceModalOpen}
           setIsAddNewServiceModalOpen={setIsAddServiceModalOpen}
           handleAddNewService={handleAddNewService}
+          companyId={session.user.company_id}
         />
       </div>
     </>

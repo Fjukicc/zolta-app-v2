@@ -8,9 +8,11 @@ import {
   LogoutOutlined,
   HomeOutlined,
   UserOutlined,
-  SettingOutlined
+  SettingOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import { MdOutlineHexagon, MdOutlineRoomService } from "react-icons/md";
+import { CgUser } from "react-icons/cg";
 import { Menu } from "antd";
 
 function getItem(label, key, icon, children, type) {
@@ -35,13 +37,23 @@ const items = [
     <CalendarOutlined />
   ),
   getItem(
-    <Link href={"/dashboard/calendar-page"}>Users</Link>,
+    <Link href={"/dashboard/rents"}>Rezervacije</Link>,
+    "/dashboard/rents",
+    <MdOutlineHexagon />
+  ),
+  getItem(
+    <Link href={"/dashboard/users"}>Korisnici</Link>,
     "/dashboard/users",
     <UserOutlined />
   ),
-  getItem("Services", "4", <MdOutlineRoomService />, [
+  getItem(
+    <Link href={"/dashboard/messages"}>Poruke</Link>,
+    "/dashboard/messages",
+    <MessageOutlined />
+  ),
+  getItem("Servisi", "4", <MdOutlineRoomService />, [
     getItem(
-      <Link href={"/dashboard/services"}>Servisi</Link>,
+      <Link href={"/dashboard/services"}>Lista Servisa</Link>,
       "/dashboard/services"
     ),
     getItem(
@@ -50,9 +62,9 @@ const items = [
     ),
   ]),
   getItem(
-    <Link href={"/dashboard/rents"}>Rezervacije</Link>,
-    "/dashboard/rents",
-    <MdOutlineHexagon />
+    <Link href={"/dashboard/employess"}>Zaposlenici</Link>,
+    "/dashboard/employess",
+    <CgUser />
   ),
   getItem(
     <Link href={"/dashboard/settings"}>Postavke</Link>,

@@ -112,96 +112,100 @@ const WeekViewLabel = ({ label, containerRef, widthOfLabelInPx }) => {
     setXCoordinate(0);
   };
 
+  //when drag modal is submited execute this function to update reservation time
   const onDragModalSubmitClick = () => {
     //update database
   };
 
   return (
-      <>
-        {isDragging && (
-          <div
-            className="flex flex-col absolute p-2 overflow-hidden cursor-pointer rounded-md shadow bg-fuchsia-300 border-green-400"
-            style={{
-              top: label.normalizeMarginTop,
-              left: `${label.normalizeLeftPosition}%`,
-              width: `${label.normalizeWidth-1}%`,
-              height: label.normalizedHeight,
-              opacity: isDragging ? 0.5 : 1,
-            }}
-          ></div>
-        )}
-        <Draggable
-          onDrag={handleDrag}
-          bounds="parent"
-          onStart={onDragStart}
-          onStop={onDragEnd}
-          axis="both"
-          grid={[widthOfLabelInPx, 24]}
-          position={{ x: xCoordinate, y: yCoordinate }}
+    <>
+      {isDragging && (
+        <div
+          className="flex flex-col absolute p-2 overflow-hidden cursor-pointer rounded-md shadow bg-fuchsia-300 border-green-400"
+          style={{
+            top: label.normalizeMarginTop,
+            left: `${label.normalizeLeftPosition}%`,
+            width: `${label.normalizeWidth - 1}%`,
+            height: label.normalizedHeight,
+            opacity: isDragging ? 0.5 : 1,
+          }}
+        ></div>
+      )}
+      <Draggable
+        onDrag={handleDrag}
+        bounds="parent"
+        onStart={onDragStart}
+        onStop={onDragEnd}
+        axis="both"
+        grid={[widthOfLabelInPx, 24]}
+        position={{ x: xCoordinate, y: yCoordinate }}
+      >
+        <div
+          className="flex flex-col absolute p-1 overflow-hidden cursor-pointer rounded-md shadow bg-fuchsia-300 border-green-400"
+          ref={elementRef}
+          style={{
+            top: labelData.normalizeMarginTop,
+            left: `${labelData.normalizeLeftPosition}%`,
+            width: `${labelData.normalizeWidth - 1}%`,
+            height: labelData.normalizedHeight,
+          }}
         >
+          {/* inner container */}
           <div
-            className="flex flex-col absolute p-1 overflow-hidden cursor-pointer rounded-md shadow bg-fuchsia-300 border-green-400"
-            ref={elementRef}
+            className="flex box no-cursor items-start"
             style={{
-              top: labelData.normalizeMarginTop,
-              left: `${labelData.normalizeLeftPosition}%`,
-              width: `${labelData.normalizeWidth-1}%`,
-              height: labelData.normalizedHeight,
+              flexDirection:
+                parseInt(label.normalizedHeight) > 48 ? "column" : "row",
+              justifyContent:
+                parseInt(label.normalizedHeight) > 48 ? "flex-start" : null,
             }}
           >
-            {/* inner container */}
-            <div
-              className="flex box no-cursor items-start"
-              style={{
-                flexDirection:
-                  parseInt(label.normalizedHeight) > 48 ? "column" : "row",
-                justifyContent:
-                  parseInt(label.normalizedHeight) > 48 ? "flex-start" : null,
-              }}
-            >
-              {/* service or services */}
-              <div className="flex">
-                {labelData.service_name.map((service) => {
-                  return (
-                    <Tag key={service} className="mr-1" color="#2db7f5">
-                      {service}
-                    </Tag>
-                  );
-                })}
-              </div>
+            {/* name of the customer */}
+            <div className="mb-1 font-light text-sm">{labelData.name}</div>
 
-              {/* label time */}
-              <div>
-                <span
-                  style={{
-                    fontSize: parseInt(label.normalizedHeight) > 48 ? 14 : 14,
-                  }}
-                >
-                  {moment(labelData.start_time, "HH:mm:ss")
-                    .format("HH:mm")
-                    .toString()}
-                </span>
-                -
-                <span>
-                  {moment(labelData.end_time, "HH:mm:ss")
-                    .format("HH:mm")
-                    .toString()}
-                </span>
-              </div>
+            {/* label time */}
+            <div>
+              <span
+                style={{
+                  fontSize: parseInt(label.normalizedHeight) > 48 ? 14 : 14,
+                }}
+              >
+                {moment(labelData.start_time, "HH:mm:ss")
+                  .format("HH:mm")
+                  .toString()}
+              </span>
+              -
+              <span>
+                {moment(labelData.end_time, "HH:mm:ss")
+                  .format("HH:mm")
+                  .toString()}
+              </span>
+            </div>
+
+            {/* service or services */}
+            <div className="flex">
+              {labelData.services.map((service) => {
+                return (
+                  <Tag key={service.id} className="mr-1" color="#2db7f5">
+                    {service.name}
+                  </Tag>
+                );
+              })}
             </div>
           </div>
-        </Draggable>
-        {confirmDragModalVisible && (
-          <OnDragConfrimModal
-            onDragModalSubmitClick={onDragModalSubmitClick}
-            cancelModal={cancelModal}
-            confirmDragModalVisible={confirmDragModalVisible}
-            newLabel={labelData}
-            oldLabel={label}
-            isWeek={true}
-          />
-        )}
-      </>
+        </div>
+      </Draggable>
+      {confirmDragModalVisible && (
+        <OnDragConfrimModal
+          onDragModalSubmitClick={onDragModalSubmitClick}
+          cancelModal={cancelModal}
+          confirmDragModalVisible={confirmDragModalVisible}
+          newLabel={labelData}
+          oldLabel={label}
+          isWeek={true}
+        />
+      )}
+    </>
   );
 };
 

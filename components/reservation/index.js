@@ -281,9 +281,9 @@ const Reservations = () => {
                 <div className="flex items-center">
                   {/* <FaFileMedical size={18} className="mr-2" /> */}
                   <div className="flex flex-row">
-                    {record.service_name.map((service, index) => (
+                    {record?.services?.map((service, index) => (
                       <Tag color="blue" key={index}>
-                        {service}
+                        {service.name}
                       </Tag>
                     ))}
                   </div>

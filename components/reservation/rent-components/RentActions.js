@@ -1,8 +1,11 @@
 import React from 'react'
+import { Card } from 'antd';
 
 const RentActions = () => {
   return (
-    <div>RentActions</div>
+    <Card title="Akcije" bordered={false}>
+      
+    </Card>
   )
 }
 
