@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -12,6 +12,7 @@ import {
   MessageOutlined,
 } from "@ant-design/icons";
 import { MdOutlineHexagon, MdOutlineRoomService } from "react-icons/md";
+import { CgWebsite } from "react-icons/cg";
 import { CgUser } from "react-icons/cg";
 import { Menu } from "antd";
 
@@ -62,8 +63,8 @@ const items = [
     ),
   ]),
   getItem(
-    <Link href={"/dashboard/employess"}>Zaposlenici</Link>,
-    "/dashboard/employess",
+    <Link href={"/dashboard/employees"}>Zaposlenici</Link>,
+    "/dashboard/employees",
     <CgUser />
   ),
   getItem(
@@ -71,7 +72,12 @@ const items = [
     "/dashboard/settings",
     <SettingOutlined />
   ),
-  getItem(<div>Logout</div>, "/dashboard/logout", <LogoutOutlined />),
+  getItem(
+    <Link href={"/dashboard/edit-website"}>Moj Web</Link>,
+    "/dashboard/edit-website",
+    <CgWebsite />
+  ),
+  getItem(<div>Odjavi Se</div>, "/dashboard/logout", <LogoutOutlined />),
 ];
 
 const AppSidebar = () => {
@@ -79,7 +85,7 @@ const AppSidebar = () => {
   //state variables
   const [current, setCurrent] = useState(pathname);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (pathname) {
       if (current !== pathname) {
         setCurrent(pathname);

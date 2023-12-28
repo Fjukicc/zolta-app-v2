@@ -85,7 +85,7 @@ const Services = () => {
   //handle creating new service
   const handleAddNewService = async (newService) => {
     successAddingNewService(newService);
-    mutateServices();
+    await mutateServices();
   };
 
   const handleDeleteService = async (record) => {
@@ -93,7 +93,7 @@ const Services = () => {
     const result = await deleteService(service_id);
     if (result.success === true) {
       successMessage(`Izbrisan servis: ${record.name}`);
-      mutateServices();
+      await mutateServices();
     } else if (result.success === false) {
       errorMessage(`Nemožemo izbrisati servis: ${record.name}`);
     }

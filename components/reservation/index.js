@@ -7,7 +7,7 @@ import { fetcher } from "@/swr/fetcher";
 //ant d
 import { Table, Button, Tag, Popconfirm, message } from "antd";
 //icons
-import { FaUser, FaClock, FaCalendar } from "react-icons/fa";
+import { FaRegUser, FaClock, FaCalendar } from "react-icons/fa";
 //moment js
 import moment from "moment";
 //session
@@ -252,7 +252,7 @@ const Reservations = () => {
             render={(text, record, index) => {
               return (
                 <div className="flex items-center">
-                  <FaUser size={16} className="mr-2" />{" "}
+                  <FaRegUser  size={16} className="mr-2" />{" "}
                   <div className="font-medium text-md">{record.admin_name}</div>
                 </div>
               );
@@ -299,10 +299,10 @@ const Reservations = () => {
             render={(text, record, index) => {
               return (
                 <div className="flex items-center">
-                  {record.status === "Active" && (
+                  {record.expired === false && (
                     <Tag color="success">Aktivna</Tag>
                   )}
-                  {record.status === "Inactive" && (
+                  {record.expired === true && (
                     <Tag color="error">Neaktivna</Tag>
                   )}
                 </div>
@@ -326,6 +326,7 @@ const Reservations = () => {
                         rent_id: record.id,
                       },
                     }}
+                    target="_blank"
                   >
                     <Button type="link">Uredi</Button>
                   </Link>

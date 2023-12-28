@@ -1,25 +1,30 @@
-// fetchEmplyees for company
-export const fetchEmployess = async (company_id) => {
+// employee worktime
+export const getEmployeeWorktime = async (employee_id) => {
   try {
-    const data = await fetch("http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/admin/filter", {
-      method: "POST",
-      body: JSON.stringify({
-        company_id: company_id,
-      }),
-    });
+    const data = await fetch(
+      "http://ec2-54-93-214-145.eu-central-1.compute.amazonaws.com/admin/worktime",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          admin_id: employee_id,
+        }),
+      }
+    );
+
     if (!data.ok) {
-      throw new Error("Failed to fetch company employess");
+      throw new Error("Failed to fetch employee worktime");
     }
-    const list_of_employees = await data.json();
+    const employee_worktime = await data.json();
+
     return {
       success: true,
-      data: list_of_employees,
+      data: employee_worktime,
     };
   } catch (error) {
     console.error(error);
     return {
       success: false,
-      error: "Failed to fetch company employess",
+      error: "Failed to fetch employee worktime",
     };
   }
 };

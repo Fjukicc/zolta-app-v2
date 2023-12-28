@@ -1,11 +1,11 @@
-import DashLayout from "@/antd-layout/DashLayout";
 import React from "react";
-import XRayScan from "@/components/x-ray-scan";
+import DashLayout from "@/antd-layout/DashLayout";
+import Employees from "@/components/employees";
 
 const page = () => {
   return (
     <DashLayout>
-      <XRayScan />
+      <Employees />
     </DashLayout>
   );
 };

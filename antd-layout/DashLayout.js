@@ -8,16 +8,20 @@ const { Header, Sider, Content } = Layout;
 
 const DashLayout = ({ children }) => {
   //colapse sidebar
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(null);
 
   useEffect(() => {
     let is_collapsed = localStorage.getItem("sidebarCollapsed");
-    setIsSidebarCollapsed(is_collapsed === "true" ? true : false);
+    if (is_collapsed === "true" || is_collapsed === "false") {
+      setIsSidebarCollapsed(is_collapsed === "true" ? true : false);
+    } else {
+      setIsSidebarCollapsed(true);
+      localStorage.setItem("sidebarCollapsed", true);
+    }
   }, []);
 
   useEffect(() => {
-    let is_sidebar_collapsed = localStorage.getItem("sidebarCollapsed");
-    if (!isSidebarCollapsed || isSidebarCollapsed !== is_sidebar_collapsed) {
+    if (isSidebarCollapsed !== null) {
       localStorage.setItem("sidebarCollapsed", isSidebarCollapsed);
     }
   }, [isSidebarCollapsed]);
@@ -33,15 +37,17 @@ const DashLayout = ({ children }) => {
         />
       </Header>
       <Layout hasSider>
-        <Sider
-          trigger={null}
-          collapsible
-          collapsed={isSidebarCollapsed}
-          theme="light"
-          style={siderStyle}
-        >
-          <AppSidebar />
-        </Sider>
+        {isSidebarCollapsed !== null && (
+          <Sider
+            trigger={null}
+            collapsible
+            collapsed={isSidebarCollapsed}
+            theme="light"
+            style={siderStyle}
+          >
+            <AppSidebar />
+          </Sider>
+        )}
         <Content style={contentStyle}>{children}</Content>
       </Layout>
     </Layout>

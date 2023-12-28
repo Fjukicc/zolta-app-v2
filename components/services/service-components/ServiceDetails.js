@@ -101,7 +101,6 @@ const ServiceDetails = ({ service_id }) => {
   };
 
   const onSaveButtonPress = async () => {
-    console.log(activeServiceData);
     // check if user want service to be discounted
     let service_for_updating = {};
     if (isServiceDiscounted === true) {
@@ -128,7 +127,6 @@ const ServiceDetails = ({ service_id }) => {
       };
     }
     const result = await updateService(service_for_updating);
-    console.log(result);
     if (result.success === true) {
       await mutateGetServices();
       setActiveServiceData(result.data);
@@ -166,10 +164,10 @@ const ServiceDetails = ({ service_id }) => {
                     <label>Ime Servisa</label>
                     <CustomInput
                       value={activeServiceData.name}
-                      onChange={(e) => {
+                      onChange={(text) => {
                         setActiveServiceData({
                           ...activeServiceData,
-                          name: e.target.value,
+                          name: text,
                         });
                       }}
                     />

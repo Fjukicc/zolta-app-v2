@@ -97,9 +97,9 @@ const ListView = ({ reservations, currentDate }) => {
                 <div className="flex items-center">
                   {/* <FaFileMedical size={18} className="mr-2" /> */}
                   <div className="flex flex-row">
-                    {record.service_name.map((service, index) => (
-                      <Tag color="blue" key={index}>
-                        {service}
+                    {record.services.map((service) => (
+                      <Tag color="blue" key={service.id}>
+                        {service.name}
                       </Tag>
                     ))}
                   </div>

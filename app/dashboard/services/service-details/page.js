@@ -14,7 +14,9 @@ const page = ({ searchParams }) => {
         <Col span={12} className="p-4">
           <ServiceDetails service_id={service_id} />
         </Col>
-        <Col span={12}></Col>
+        <Col span={12}>
+          {/* service statistics */}
+        </Col>
       </Row>
     </DashLayout>
   );

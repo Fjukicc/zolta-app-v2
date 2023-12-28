@@ -126,7 +126,8 @@ const DayViewLabel = ({ label, containerRef }) => {
           style={{
             top: labelData.normalizeMarginTop,
             height: labelData.normalizedTimeDifference,
-            justifyContent:  parseInt(label.normalizedTimeDifference) > 48 ? null : "center",
+            justifyContent:
+              parseInt(label.normalizedTimeDifference) > 48 ? null : "center",
           }}
         >
           <div
@@ -136,20 +137,15 @@ const DayViewLabel = ({ label, containerRef }) => {
                 parseInt(label.normalizedTimeDifference) > 48
                   ? "column"
                   : "row",
-              justifyContent: parseInt(label.normalizedTimeDifference) > 48 ? "flex-start" : null,
+              justifyContent:
+                parseInt(label.normalizedTimeDifference) > 48
+                  ? "flex-start"
+                  : null,
             }}
           >
-            {/* service or services */}
-            <div className="flex flex-row">
-              {labelData.service_name.map((service) => {
-                return (
-                  <Tag key={service} className="mr-2" color="#2db7f5">
-                    {service}
-                  </Tag>
-                );
-              })}
-            </div>
-
+            {/* name of the customer */}
+            <div className="mb-1 font-light text-sm">{labelData.name}</div>
+            
             {/* label time */}
             <div>
               <span>
@@ -163,6 +159,17 @@ const DayViewLabel = ({ label, containerRef }) => {
                   .format("HH:mm")
                   .toString()}
               </span>
+            </div>
+
+            {/* service or services */}
+            <div className="flex flex-row">
+              {labelData.services.map((service) => {
+                return (
+                  <Tag key={service} className="mr-2" color="#2db7f5">
+                    {service.name}
+                  </Tag>
+                );
+              })}
             </div>
           </div>
         </div>
